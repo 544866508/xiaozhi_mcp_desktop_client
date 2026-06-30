@@ -1,0 +1,2 @@
+# xiaozhi_mcp_desktop_client
+小智MCP桌面客户端
