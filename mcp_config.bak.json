@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "local-stdio-calculator": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "calculator"]
+    },
+    "remote-sse-server": {
+      "type": "sse",
+      "url": "https://api.example.com/sse",
+      "disabled": true
+    },
+    "remote-http-server": {
+      "type": "http",
+      "url": "https://api.example.com/mcp",
+      "disabled": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+python-dotenv>=1.2.1
+websockets>=15.0.1
+mcp>=1.20.0
+pydantic>=2.12.3
+mcp-proxy>=0.10.0
+fastmcp>=2.13.0.2
+
+pywebview==6.2.1

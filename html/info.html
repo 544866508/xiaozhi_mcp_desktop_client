@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+        body {
+            padding: 24px;
+            background-color: #17181c;
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            padding-left: 4px;
+            border-left: 4px solid #367bc9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .version-tag {
+            font-size: 13px;
+            background: #367bc9;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: #fff;
+        }
+        .section {
+            margin: 20px 0;
+            background: #202228;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .section h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+        .section p {
+            line-height: 1.6;
+            margin: 6px 0;
+            color: #cbd5e1;
+        }
+        .repo-link-box {
+            margin-top: 10px;
+            padding: 12px;
+            background: #2a2c33;
+            border-radius: 6px;
+        }
+        a {
+            color: #60a9f0;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .tip-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        /* 底部按钮栏 右对齐，暗色低亮度按钮 */
+        .btn-wrap {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .close-btn {
+            font-size: 16px;
+            padding: 10px 24px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            /* 降低明度暗色按钮，不用纯白 */
+            background: #2a2c33;
+            color: #e2e8f0;
+            border: 1px solid #3d4048;
+        }
+        .close-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            background: #343740;
+        }
+        /* 全局深色滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #17181c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444852;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555a66;
+        }
+    </style>
+</head>
+<body>
+    <h3>工具详情 <span class="version-tag">V1.0.13</span></h3>
+
+    <div class="section">
+        <h4>1. 软件介绍</h4>
+        <p>本工具为小智MCP标准服务WebSocket桥接客户端，提供windows可视化GUI管理面板。支持多MCP服务统一启停、状态可视化展示，MCP工具可视化编辑、启停状态自动同步。大幅简化小智MCP服务对接流程。</p>
+        <p>本工具无任何收费功能，如果帮你节省了开发时间、解决了问题，欢迎去 <b><a href="https://www.baidu.com" target="_blank">B站三连支持一下</a> 或者去 GitHub 点个 Star</b>，你动动手指就是对我最大的鼓励。</p>
+    </div>
+
+    <div class="section">
+        <h4>2. 使用教程</h4>
+        <p>bilibili：<a href="https://www.baidu.com" target="_blank">https://www.baidu.com</a></p>
+    </div>
+
+    <div class="section">
+        <h4>3. 仓库地址</h4>
+        <p>github：<a href="https://github.com/544866508/xiaozhi_mcp_desktop_client" target="_blank">https://github.com/544866508/xiaozhi_mcp_desktop_client</a></p>
+    </div>
+
+    <!-- 按钮容器右对齐 -->
+    <div class="btn-wrap">
+        <button class="close-btn" onclick="parent.closeInfoMask()">
+            <span>✕</span> 关闭
+        </button>
+    </div>
+</body>
+</html>

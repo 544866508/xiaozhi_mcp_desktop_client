@@ -1,0 +1,14 @@
+{
+  "amap-maps": {
+    "running": true,
+    "pid": 13460
+  },
+  "local-stdio-calculator": {
+    "running": true,
+    "pid": 31328
+  },
+  "aigohotel-mcp": {
+    "running": true,
+    "pid": 31516
+  }
+}

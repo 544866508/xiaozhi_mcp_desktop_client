@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MCP配置管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+        body {
+            padding: 24px;
+            background-color: #17181c;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+        /* 顶部按钮左右分栏布局 */
+        .top-bar {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-right-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 24px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+        }
+        /* 主蓝色按钮 降低明度暗色版 */
+        .btn-primary {
+            background: linear-gradient(135deg, #2b64aa, #1f4e88);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #306fb9, #245899);
+        }
+        /* 次要按钮暗色模式 */
+        .btn-normal {
+            background: #2a2c33;
+            color: #e2e8f0;
+            border: 1px solid #3d4048;
+        }
+        .btn-normal:hover {
+            background: #343740;
+        }
+        /* 危险删除按钮低亮度 */
+        .btn-danger {
+            background: linear-gradient(135deg, #993b3b, #7a2c2c);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #aa4242, #883333);
+        }
+        /* 表格暗色美化 */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background: #202228;
+        }
+        th,td {
+            padding: 12px 14px;
+            vertical-align: top;
+            border-bottom: 1px solid #33363d;
+            color: #cbd5e1;
+        }
+        th {
+            background: linear-gradient(135deg, #2c2f36, #24262c);
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        pre {
+            white-space: pre-wrap;
+            max-width: 320px;
+            max-height: 140px;
+            overflow: auto;
+            margin:0;
+            font-size:12px;
+            background: #1a1c20;
+            padding: 8px;
+            border-radius: 6px;
+            color: #a8b9d4;
+        }
+        /* 弹窗遮罩 磨砂暗色 */
+        .mask {
+            display: none;
+            position: fixed;
+            left:0;top:0;right:0;bottom:0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .dialog {
+            background: #202228;
+            padding: 24px;
+            width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .dialog h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            padding-left: 4px;
+            border-left: 4px solid #367bc9;
+        }
+        /* 表单输入项暗色 */
+        .form-item {
+            margin: 16px 0;
+        }
+        .form-item label {
+            display: block;
+            font-size: 15px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+        input, textarea {
+            width:100%;
+            padding: 12px 14px;
+            border: 1px solid #3d4048;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            background: #1a1c20;
+            color: #e2e8f0;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #367bc9;
+            box-shadow: 0 0 0 3px rgba(54, 123, 201, 0.18);
+        }
+        textarea {
+            min-height: 300px;
+            font-family: monospace;
+            margin: 10px 0;
+            resize: none;
+        }
+        /* 弹窗按钮右对齐容器 */
+        .dialog-btns {
+            margin-top:20px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        #delTip {
+            font-size: 16px;
+            color: #e2e8f0;
+            margin-bottom: 24px;
+        }
+        /* 自定义滚动条暗色适配 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1c20;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444852;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555a66;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部布局：左侧返回按钮，右侧功能按钮组 -->
+    <div class="top-bar">
+        <button class="btn-normal" onclick="window.location.href='index.html'">
+            <span>⮐</span> 返回主页
+        </button>
+        <div class="top-right-btns">
+            <button class="btn-primary" onclick="openAddDialog()">
+                <span>✛</span> 新增MCP工具
+            </button>
+            <button class="btn-normal" onclick="openBatchEdit()">
+                <span>✎</span> 批量修改(编辑完整JSON)
+            </button>
+        </div>
+    </div>
+
+    <table id="mcpTable">
+        <!-- 原生colgroup分配列宽，表头单元格同步宽度，横线永不错位 -->
+        <colgroup>
+            <col style="width:22%">
+            <col style="width:15%">
+            <col style="width:48%">
+            <col style="width:15%">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>MCP名称</th>
+                <th>调用类型(type)</th>
+                <th>描述(description)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- 新增/编辑单行弹窗（已移除单独名称输入框） -->
+    <div class="mask" id="editMask">
+        <div class="dialog">
+            <h3 id="dialogTitle">新增MCP</h3>
+            <div class="form-item">
+                <ul style="margin-left:30px">
+                    <li>完整MCP配置（粘贴整块JSON，格式示例：{"名称":{...配置}}）</li>
+                    <li>注意小智MCP识别的字段有type、url、headers，这几个字段请务必保持一致</li>
+                    <li>有点MCP粘贴过来字段不一致，比如给的是BaseUrl字段，实际上就是url，字段名需要修改为url，否则启动将报错，后续迭代版本我会做名称自适应</li>
+                    <li>description字段用于回显，方便区分MCP用途，最好也填上内容</li>
+                </ul>
+                <textarea id="editJson" placeholder='{
+  "aigohotel-mcp": {
+    "type": "http",
+    "url": "https://mcp.aigohotel.com/mcp"
+  }
+}'></textarea>
+            </div>
+            <div class="dialog-btns">
+                <button class="btn-primary" onclick="saveSingleMcp()">保存</button>
+                <button class="btn-normal" onclick="closeEditMask()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量编辑完整JSON弹窗 -->
+    <div class="mask" id="batchMask">
+        <div class="dialog">
+            <h3>批量编辑 mcp_config.json</h3>
+            <textarea id="batchJson"></textarea>
+            <div class="dialog-btns">
+                <button class="btn-primary" onclick="saveBatchJson()">保存并刷新</button>
+                <button class="btn-normal" onclick="closeBatchMask()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="mask" id="delMask">
+        <div class="dialog">
+            <p id="delTip">确定删除该MCP配置？</p>
+            <div class="dialog-btns">
+                <button class="btn-danger" onclick="confirmDelete()">确认删除</button>
+                <button class="btn-normal" onclick="closeDelMask()">取消</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+let mcpData = {};
+let editTargetKey = null;
+
+// 等待pywebview初始化完成再读取配置
+async function loadConfig() {
+    while (!window.pywebview) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    try {
+        const rawText = await window.pywebview.api.read_mcp_config();
+        console.log("读取到MCP配置JSON：", rawText);
+        mcpData = JSON.parse(rawText);
+        renderTable();
+    } catch (err) {
+        console.error("读取MCP配置失败：", err);
+        alert("读取配置文件出错：" + err.message);
+    }
+}
+
+// DOM渲染完成后执行加载
+document.addEventListener('DOMContentLoaded', loadConfig);
+
+// 渲染表格函数
+function renderTable() {
+    const tbody = document.querySelector("#mcpTable tbody");
+    tbody.innerHTML = "";
+    const servers = mcpData.mcpServers || {};
+    for(const name of Object.keys(servers)){
+        const item = servers[name];
+        // 读取description，不存在则显示-
+        const desc = item.description ?? "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td>${item.type || "-"}</td>
+            <td>${desc}</td>
+            <td>
+                <!-- 固定宽度弹性父容器，按钮强制同行，永不换行 -->
+                <div style="width:150px;display:flex;gap:8px;align-items:center;">
+                    <button class="btn-normal" style="padding:6px 12px;font-size:14px;gap:4px;" onclick="openEditDialog('${name}')">
+                        <span>✎</span> 编辑
+                    </button>
+                    <button class="btn-danger" style="padding:6px 12px;font-size:14px;gap:4px;" onclick="openDelDialog('${name}')">
+                        <span>🗑</span> 删除
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// 新增弹窗
+function openAddDialog() {
+    editTargetKey = null;
+    document.getElementById("dialogTitle").innerText = "新增MCP工具";
+    document.getElementById("editJson").value = `{
+  "mcp-name": {
+    "type": "stdio",
+    "command": ""
+  }
+}`;
+    document.getElementById("editMask").style.display = "flex";
+}
+
+// 编辑单行弹窗：自动生成完整外层JSON填入编辑框
+function openEditDialog(name) {
+    editTargetKey = name;
+    document.getElementById("dialogTitle").innerText = "编辑MCP";
+    // 组装成完整外层结构给用户编辑
+    const tempWrap = {};
+    tempWrap[name] = mcpData.mcpServers[name];
+    document.getElementById("editJson").value = JSON.stringify(tempWrap, null, 2);
+    document.getElementById("editMask").style.display = "flex";
+}
+
+function closeEditMask(){
+    document.getElementById("editMask").style.display = "none";
+}
+
+// 保存单行新增/编辑（自动解析外层key）
+async function saveSingleMcp() {
+    while (!window.pywebview) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    const jsonStr = document.getElementById("editJson").value.trim();
+    let wrapObj;
+    try{
+        wrapObj = JSON.parse(jsonStr);
+    }catch(e){
+        alert("JSON格式错误："+e.message);
+        return;
+    }
+    // 外层只能有一个key（单个MCP配置）
+    const keys = Object.keys(wrapObj);
+    if (keys.length !== 1) {
+        alert("粘贴内容必须仅包含单个MCP配置，外层只能一个名称key！");
+        return;
+    }
+    const newName = keys[0];
+    const newConfig = wrapObj[newName];
+
+    // 如果是编辑且名称改变，删除旧配置
+    if(editTargetKey && editTargetKey !== newName){
+        delete mcpData.mcpServers[editTargetKey];
+    }
+    // 写入新配置
+    mcpData.mcpServers[newName] = newConfig;
+
+    await saveFullConfig();
+    closeEditMask();
+    await loadConfig();
+}
+
+// 删除弹窗
+function openDelDialog(name) {
+    editTargetKey = name;
+    document.getElementById("delTip").innerText = `确定删除【${name}】配置吗？`;
+    document.getElementById("delMask").style.display = "flex";
+}
+function closeDelMask(){
+    document.getElementById("delMask").style.display = "none";
+}
+async function confirmDelete() {
+    while (!window.pywebview) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    delete mcpData.mcpServers[editTargetKey];
+    await saveFullConfig();
+    closeDelMask();
+    await loadConfig();
+}
+
+// 批量编辑弹窗
+function openBatchEdit() {
+    document.getElementById("batchJson").value = JSON.stringify(mcpData,null,2);
+    document.getElementById("batchMask").style.display = "flex";
+}
+function closeBatchMask(){
+    document.getElementById("batchMask").style.display = "none";
+}
+async function saveBatchJson() {
+    while (!window.pywebview) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    const txt = document.getElementById("batchJson").value.trim();
+    try{
+        mcpData = JSON.parse(txt);
+    }catch(e){
+        alert("JSON语法错误："+e.message);
+        return;
+    }
+    await saveFullConfig();
+    closeBatchMask();
+    await loadConfig();
+    alert("保存成功，已刷新表格");
+}
+
+// 统一保存完整配置文件
+async function saveFullConfig() {
+    const str = JSON.stringify(mcpData,null,2);
+    await window.pywebview.api.write_mcp_config(str);
+}
+</script>
+</body>
+</html>

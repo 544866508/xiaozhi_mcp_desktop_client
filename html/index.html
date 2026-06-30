@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./str_bg.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+
+        /* 按钮容器，横向一行摆放 */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 24px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            /* 柔和阴影 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+        /* 启动按钮：低饱和蓝渐变，去掉高亮度艳蓝 */
+        .btn-start {
+            background: linear-gradient(135deg, #285b96, #1e4470);
+            color: #f3f4f6;
+        }
+        .btn-start:hover {
+            background: linear-gradient(135deg, #2d68aa, #234e82);
+        }
+        /* 停止按钮：低饱和暗红，弱化刺眼大红 */
+        .btn-stop {
+            background: linear-gradient(135deg, #8c3a3a, #6b2c2c);
+            color: #f3f4f6;
+        }
+        .btn-stop:hover {
+            background: linear-gradient(135deg, #9e4242, #7d3333);
+        }
+        /* 普通次要按钮 - 暗黑渐变灰色 */
+        .btn-normal {
+            background: linear-gradient(135deg, #272c38, #20242d);
+            color: #d1d5db;
+            border: 1px solid #363c4a;
+        }
+        .btn-normal:hover {
+            background: linear-gradient(135deg, #303744, #262b36);
+        }
+        .mcp-wrap {
+            margin: 16px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .mcp-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            color: #f3f4f6;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        /* 在线：原低饱和灰绿 → 替换为低明度深蓝 */
+        .tag-online {
+            background: linear-gradient(135deg, #2a5887, #214369);
+        }
+        /* 离线：低饱和砖红，去掉亮大红 */
+        .tag-offline {
+            background: linear-gradient(135deg, #803838, #612b2b);
+        }
+        /* 全部停止灰标签 */
+        .tag-stop-all {
+            background: linear-gradient(135deg, #424752, #33373f);
+        }
+        .status-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin: 12px 0 8px;
+            padding-left: 4px;
+            border-left: 4px solid #3570b0;
+        }
+
+        /* 弹窗遮罩美化 */
+        .mask {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 999;
+            backdrop-filter: blur(6px);
+        }
+        .dialog-box {
+            width: 640px;
+            height: 78vh;
+            margin: 60px auto 0;
+            background: linear-gradient(145deg, #1a1f29, #202530);
+            border-radius: 14px;
+            overflow: hidden;
+            /* 外发光半径70px，宽度接近0.5cm，高亮灰白色 */
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.15),
+                0 0 70px rgba(240, 240, 240, 0.22),
+                0 12px 60px rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .dialog-box iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- 按钮全部放入容器，横向一行 + 图标 -->
+    <div class="btn-group">
+        <button id="ctrlBtn" class="btn-start">
+            <span>▶</span> 启动服务
+        </button>
+        <button class="btn-normal" onclick="openAddrDialog()">
+            <span>🔗</span> 编辑接入点地址
+        </button>
+        <button class="btn-normal" onclick="openMcpConfig()">
+            <span>⚙</span> 配置MCP
+        </button>
+        <button class="btn-normal" onclick="openInfoDialog()">
+            <span>ⓘ</span> 更多信息
+        </button>
+    </div>
+
+    <div class="status-title">当前MCP运行状态</div>
+    <div class="mcp-wrap" id="statusBox"></div>
+
+    <!-- 更多信息弹窗 -->
+    <div class="mask" id="infoMask" onclick="closeInfoMask()">
+        <div class="dialog-box" onclick="event.stopPropagation()">
+            <iframe src="info.html" id="infoIframe"></iframe>
+        </div>
+    </div>
+
+    <!-- 接入点配置弹窗 -->
+    <div class="mask" id="addrMask" onclick="closeAddrMask()">
+        <div class="dialog-box" onclick="event.stopPropagation()">
+            <iframe src="config.html" id="addrIframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById("ctrlBtn");
+        const statusBox = document.getElementById("statusBox");
+        const infoMask = document.getElementById("infoMask");
+        const infoIframe = document.getElementById("infoIframe");
+        const addrMask = document.getElementById("addrMask");
+        const addrIframe = document.getElementById("addrIframe");
+        let running = false;
+
+        // 读取本地缓存
+        function loadCacheState() {
+            const cache = localStorage.getItem("mcp_running");
+            running = cache === "true";
+            // 切换文字+图标
+            if(running){
+                btn.innerHTML = `<span>⏹</span> 关闭服务`;
+                btn.className = "btn-stop";
+            }else{
+                btn.innerHTML = `<span>▶</span> 启动服务`;
+                btn.className = "btn-start";
+            }
+        }
+        // 保存点击状态到缓存
+        function saveCacheState(state) {
+            localStorage.setItem("mcp_running", state);
+        }
+
+        // 跳转MCP配置页面
+        function openMcpConfig(){
+            window.location.href = "mcp_config.html";
+        }
+
+        // ========== 更多信息弹窗 ==========
+        function openInfoDialog() {
+            infoMask.style.display = "block";
+            infoIframe.src = "info.html";
+        }
+        window.closeInfoMask = function() {
+            infoMask.style.display = "none";
+        }
+
+        // ========== 接入点配置弹窗 ==========
+        function openAddrDialog() {
+            addrMask.style.display = "block";
+            addrIframe.src = "config.html";
+        }
+        window.closeAddrMask = function() {
+            addrMask.style.display = "none";
+        }
+
+        // 刷新MCP彩色标签
+        async function renderMcpStatus() {
+            try {
+                const statusData = await window.pywebview.api.get_mcp_status();
+                statusBox.innerHTML = "";
+                if (!statusData || Object.keys(statusData).length === 0) {
+                    statusBox.innerHTML = "<span style='color:#8892a0'>暂无MCP服务</span>";
+                    return;
+                }
+                for (const [name, info] of Object.entries(statusData)) {
+                    const tag = document.createElement("span");
+                    if (!running) {
+                        tag.className = "mcp-tag tag-stop-all";
+                    } else {
+                        tag.className = "mcp-tag " + (info.running ? "tag-online" : "tag-offline");
+                    }
+                    let text = `${name}`;
+                    if (info.pid) text += ` (PID:${info.pid})`;
+                    tag.innerText = text;
+                    statusBox.appendChild(tag);
+                }
+            } catch (err) {
+                statusBox.innerHTML = "<span style='color:#646c78'>获取中...</span>";
+                console.error("读取MCP状态错误", err);
+            }
+        }
+
+        // 按钮点击逻辑【已修改，增加地址校验】
+        btn.onclick = async ()=>{
+            // 前置校验接入地址
+            const wssAddr = await window.pywebview.api.get_mcp_addr();
+            if (!wssAddr || wssAddr.trim() === "") {
+                alert("请先编辑并填写MCP接入点WSS地址！");
+                openAddrDialog();
+                return;
+            }
+
+            if(!running){
+                await window.pywebview.api.start_mcp()
+                running = true;
+            }else{
+                await window.pywebview.api.stop_mcp()
+                running = false;
+            }
+            saveCacheState(running);
+            // 切换按钮文字+图标+样式
+            if(running){
+                btn.innerHTML = `<span>⏹</span> 关闭服务`;
+                btn.className = "btn-stop";
+            }else{
+                btn.innerHTML = `<span>▶</span> 启动服务`;
+                btn.className = "btn-start";
+            }
+            renderMcpStatus();
+        }
+
+        // 页面载入
+        (async function initPage() {
+            loadCacheState();
+        })();
+
+        setTimeout(renderMcpStatus, 500);
+        setInterval(renderMcpStatus, 10000);
+    </script>
+</body>
+</html>
