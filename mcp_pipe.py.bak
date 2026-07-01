@@ -1,6 +1,23 @@
 """
 Simple MCP stdio <-> WebSocket pipe with optional unified config.
 Version: 0.2.0
+
+Usage (env):
+    export MCP_ENDPOINT=<ws_endpoint>
+    # Windows (PowerShell): $env:MCP_ENDPOINT = "<ws_endpoint>"
+
+Start server process(es) from config:
+Run all configured servers (default)
+    python mcp_pipe.py
+
+Run a single local server script (back-compat)
+    python mcp_pipe.py path/to/server.py
+
+Config discovery order:
+    $MCP_CONFIG, then ./mcp_config.json
+
+Env overrides:
+    (none for proxy; uses current Python: python -m mcp_proxy)
 """
 
 import asyncio
@@ -11,24 +28,8 @@ import os
 import signal
 import sys
 import json
-import time
 from dotenv import load_dotenv
-# 仅新增一行导入，所有状态逻辑隔离外部文件
-from mcp_status_tracker import (
-    status_flush_worker,
-    update_target_status,
-    parse_websocket_exception,
-    parse_subproc_stderr_log,
-    get_target_current_state,  # 新增
-    STATUS_CONFIG_ERR,
-    STATUS_SCRIPT_MISSING,
-    STATUS_RECONNECTING,
-    STATUS_ONLINE,
-    STATUS_PROCESS_EXIT,
-    STATUS_AUTH_FAILED,
-    STATUS_NOT_FOUND,
-    STATUS_SERVER_ERR
-)
+from utils.mcp_status_op import write_status
 
 # Auto-load environment variables from a .env file if present
 load_dotenv()
@@ -51,8 +52,6 @@ async def connect_with_retry(uri, target):
     while True:  # Infinite reconnection
         try:
             if reconnect_attempt > 0:
-                # 仅新增一行状态更新
-                update_target_status(target, STATUS_RECONNECTING, f"Wait {backoff}s retry, attempt:{reconnect_attempt}", reconnect_attempt)
                 logger.info(f"[{target}] Waiting {backoff}s before reconnection attempt {reconnect_attempt}...")
                 await asyncio.sleep(backoff)
 
@@ -61,22 +60,17 @@ async def connect_with_retry(uri, target):
 
         except Exception as e:
             reconnect_attempt += 1
-            err_state, err_text = parse_websocket_exception(e)
-            logger.warning(f"[{target}] Connection closed (attempt {reconnect_attempt}): {err_text}")
-            # 仅新增一行状态更新
-            update_target_status(target, err_state, err_text, reconnect_attempt)
+            logger.warning(f"[{target}] Connection closed (attempt {reconnect_attempt}): {e}")
+            write_status(target, False)
             # Calculate wait time for next reconnection (exponential backoff)
             backoff = min(backoff * 2, MAX_BACKOFF)
 
 async def connect_to_server(uri, target):
     """Connect to WebSocket server and pipe stdio for the given server target."""
-    process = None
     try:
         logger.info(f"[{target}] Connecting to WebSocket server...")
         async with websockets.connect(uri) as websocket:
             logger.info(f"[{target}] Successfully connected to WebSocket server")
-            # 仅新增一行：标记在线
-            update_target_status(target, STATUS_ONLINE)
 
             # Start server process (built from CLI arg or config)
             cmd, env = build_server_command(target)
@@ -90,7 +84,8 @@ async def connect_to_server(uri, target):
                 env=env
             )
             logger.info(f"[{target}] Started server process: {' '.join(cmd)}")
-
+            write_status(target, True, process.pid)
+            
             # Create two tasks: read from WebSocket and write to process, read from process and write to WebSocket
             await asyncio.gather(
                 pipe_websocket_to_process(websocket, process, target),
@@ -98,12 +93,14 @@ async def connect_to_server(uri, target):
                 pipe_process_stderr_to_terminal(process, target)
             )
     except websockets.exceptions.ConnectionClosed as e:
+        logger.error(f"[{target}] WebSocket connection closed: {e}")
         raise  # Re-throw exception to trigger reconnection
     except Exception as e:
+        logger.error(f"[{target}] Connection error: {e}")
         raise  # Re-throw exception
-        # mcp_pipe.py connect_to_server 函数的 finally 片段
     finally:
-        if process is not None:
+        # Ensure the child process is properly terminated
+        if 'process' in locals():
             logger.info(f"[{target}] Terminating server process")
             try:
                 process.terminate()
@@ -111,13 +108,7 @@ async def connect_to_server(uri, target):
             except subprocess.TimeoutExpired:
                 process.kill()
             logger.info(f"[{target}] Server process terminated")
-            # 关键修改：不强制覆盖状态，仅当当前状态不是故障类时才标记进程退出
-            st = get_target_current_state(target)
-            current_st = st.get("status", "")
-            fault_states = {STATUS_AUTH_FAILED, STATUS_NOT_FOUND, STATUS_SERVER_ERR, STATUS_CONFIG_ERR,
-                            STATUS_SCRIPT_MISSING}
-            if current_st not in fault_states:
-                update_target_status(target, STATUS_PROCESS_EXIT, "MCP subprocess exited")
+            write_status(target, False, process.pid)
 
 async def pipe_websocket_to_process(websocket, process, target):
     """Read data from WebSocket and write to process stdin"""
@@ -126,7 +117,7 @@ async def pipe_websocket_to_process(websocket, process, target):
             # Read message from WebSocket
             message = await websocket.recv()
             logger.debug(f"[{target}] << {message[:120]}...")
-
+            
             # Write to process stdin (in text mode)
             if isinstance(message, bytes):
                 message = message.decode('utf-8')
@@ -146,11 +137,11 @@ async def pipe_process_to_websocket(process, websocket, target):
         while True:
             # Read data from process stdout
             data = await asyncio.to_thread(process.stdout.readline)
-
+            
             if not data:  # If no data, the process may have ended
                 logger.info(f"[{target}] Process has ended output")
                 break
-
+                
             # Send data to WebSocket
             logger.debug(f"[{target}] >> {data[:120]}...")
             # In text mode, data is already a string, no need to decode
@@ -165,32 +156,21 @@ async def pipe_process_stderr_to_terminal(process, target):
         while True:
             # Read data from process stderr
             data = await asyncio.to_thread(process.stderr.readline)
-
+            
             if not data:  # If no data, the process may have ended
                 logger.info(f"[{target}] Process has ended stderr output")
                 break
-
+                
             # Print stderr data to terminal (in text mode, data is already a string)
             sys.stderr.write(data)
             sys.stderr.flush()
-
-            # 新增：解析stderr日志识别业务HTTP错误
-            err_match = parse_subproc_stderr_log(data)
-            if err_match is not None:
-                err_status, err_msg = err_match
-                update_target_status(target, err_status, err_msg)
-
     except Exception as e:
         logger.error(f"[{target}] Error in process stderr pipe: {e}")
         raise  # Re-throw exception to trigger reconnection
 
-
 def signal_handler(sig, frame):
     """Handle interrupt signals"""
     logger.info("Received interrupt signal, shutting down...")
-    # 退出前刷新状态文件
-    from mcp_status_tracker import flush_status_to_file
-    flush_status_to_file()
     sys.exit(0)
 
 def load_config():
@@ -223,9 +203,7 @@ def build_server_command(target=None):
     if target in servers:
         entry = servers[target] or {}
         if entry.get("disabled"):
-            err_msg = f"Server '{target}' is disabled in config"
-            update_target_status(target, STATUS_CONFIG_ERR, err_msg)
-            raise RuntimeError(err_msg)
+            raise RuntimeError(f"Server '{target}' is disabled in config")
         typ = (entry.get("type") or entry.get("transportType") or "stdio").lower()
 
         # environment for child process
@@ -237,17 +215,13 @@ def build_server_command(target=None):
             command = entry.get("command")
             args = entry.get("args") or []
             if not command:
-                err_msg = f"Server '{target}' is missing 'command'"
-                update_target_status(target, STATUS_CONFIG_ERR, err_msg)
-                raise RuntimeError(err_msg)
+                raise RuntimeError(f"Server '{target}' is missing 'command'")
             return [command, *args], child_env
 
         if typ in ("sse", "http", "streamablehttp"):
             url = entry.get("url")
             if not url:
-                err_msg = f"Server '{target}' (type {typ}) is missing 'url'"
-                update_target_status(target, STATUS_CONFIG_ERR, err_msg)
-                raise RuntimeError(err_msg)
+                raise RuntimeError(f"Server '{target}' (type {typ}) is missing 'url'")
             # Unified approach: always use current Python to run mcp-proxy module
             cmd = [sys.executable, "-m", "mcp_proxy"]
             if typ in ("http", "streamablehttp"):
@@ -259,19 +233,18 @@ def build_server_command(target=None):
             cmd.append(url)
             return cmd, child_env
 
-        err_msg = f"Unsupported server type: {typ}"
-        update_target_status(target, STATUS_CONFIG_ERR, err_msg)
-        raise RuntimeError(err_msg)
+        raise RuntimeError(f"Unsupported server type: {typ}")
 
     # Fallback to script path (back-compat)
     script_path = target
     if not os.path.exists(script_path):
-        err_msg = f"'{target}' script file not found"
-        update_target_status(target, STATUS_SCRIPT_MISSING, err_msg)
         raise RuntimeError(
             f"'{target}' is neither a configured server nor an existing script"
         )
     return [sys.executable, script_path], os.environ.copy()
+
+
+
 
 if __name__ == "__main__":
 
@@ -292,10 +265,8 @@ if __name__ == "__main__":
     # Determine target: default to all if no arg; single target otherwise
     target_arg = sys.argv[1] if len(sys.argv) >= 2 else None
 
-    async def _main():
-        # 启动独立定时刷盘协程
-        asyncio.create_task(status_flush_worker())
 
+    async def _main():
         if not target_arg:
             cfg = load_config()
             servers_cfg = (cfg.get("mcpServers") or {})
@@ -314,9 +285,8 @@ if __name__ == "__main__":
             if os.path.exists(target_arg):
                 await connect_with_retry(endpoint_url, target_arg)
             else:
-                err_msg = f"Script path {target_arg} does not exist"
-                update_target_status(target_arg, STATUS_SCRIPT_MISSING, err_msg)
-                logger.error("Argument must be a local Python script path. To run configured servers, run without arguments.")
+                logger.error(
+                    "Argument must be a local Python script path. To run configured servers, run without arguments.")
                 sys.exit(1)
 
 
@@ -326,7 +296,4 @@ if __name__ == "__main__":
         logger.info("Program interrupted by user")
     except Exception as e:
         logger.error(f"Program execution error: {e}")
-    finally:
-        # 程序最终退出强制写状态
-        from mcp_status_tracker import flush_status_to_file
-        flush_status_to_file()
+

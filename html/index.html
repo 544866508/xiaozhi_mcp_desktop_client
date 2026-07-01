@@ -11,7 +11,6 @@
             font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
         }
 
-        /* 按钮容器，横向一行摆放 */
         .btn-group {
             display: flex;
             flex-wrap: wrap;
@@ -25,7 +24,6 @@
             border: none;
             border-radius: 8px;
             transition: all 0.2s ease;
-            /* 柔和阴影 */
             box-shadow: 0 2px 8px rgba(0,0,0,0.25);
             white-space: nowrap;
             display: flex;
@@ -36,7 +34,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
         }
-        /* 启动按钮：低饱和蓝渐变，去掉高亮度艳蓝 */
         .btn-start {
             background: linear-gradient(135deg, #285b96, #1e4470);
             color: #f3f4f6;
@@ -44,7 +41,6 @@
         .btn-start:hover {
             background: linear-gradient(135deg, #2d68aa, #234e82);
         }
-        /* 停止按钮：低饱和暗红，弱化刺眼大红 */
         .btn-stop {
             background: linear-gradient(135deg, #8c3a3a, #6b2c2c);
             color: #f3f4f6;
@@ -52,7 +48,6 @@
         .btn-stop:hover {
             background: linear-gradient(135deg, #9e4242, #7d3333);
         }
-        /* 普通次要按钮 - 暗黑渐变灰色 */
         .btn-normal {
             background: linear-gradient(135deg, #272c38, #20242d);
             color: #d1d5db;
@@ -62,7 +57,7 @@
             background: linear-gradient(135deg, #303744, #262b36);
         }
         .mcp-wrap {
-            margin: 16px 0;
+            margin: 12px 0 20px;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -74,17 +69,35 @@
             color: #f3f4f6;
             font-size: 14px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            position: relative;
+            cursor: help;
         }
-        /* 在线：原低饱和灰绿 → 替换为低明度深蓝 */
+        /* 在线正常 */
         .tag-online {
             background: linear-gradient(135deg, #2a5887, #214369);
         }
-        /* 离线：低饱和砖红，去掉亮大红 */
-        .tag-offline {
-            background: linear-gradient(135deg, #803838, #612b2b);
+        /* 重连中 */
+        .tag-reconnect {
+            background: linear-gradient(135deg, #6b4896, #4e3570);
         }
-        /* 全部停止灰标签 */
-        .tag-stop-all {
+        /* 401认证失败 */
+        .tag-auth401 {
+            background: linear-gradient(135deg, #a63c3c, #7d2e2e);
+        }
+        /* 404地址错误 */
+        .tag-url404 {
+            background: linear-gradient(135deg, #b0642e, #864c22);
+        }
+        /* 5xx服务故障 */
+        .tag-server5xx {
+            background: linear-gradient(135deg, #b89228, #8c6e1e);
+        }
+        /* 配置错误/脚本缺失 */
+        .tag-configerr {
+            background: linear-gradient(135deg, #774444, #5c3333);
+        }
+        /* 进程退出/离线 */
+        .tag-processexit {
             background: linear-gradient(135deg, #424752, #33373f);
         }
         .status-title {
@@ -96,7 +109,37 @@
             border-left: 4px solid #3570b0;
         }
 
-        /* 弹窗遮罩美化 */
+        /* ========== 新增：状态图例样式 ========== */
+        .legend-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 20px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #c0c8d6;
+        }
+        .legend-block {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .block-online { background: linear-gradient(135deg, #2a5887, #214369); }
+        .block-reconnect { background: linear-gradient(135deg, #6b4896, #4e3570); }
+        .block-auth401 { background: linear-gradient(135deg, #a63c3c, #7d2e2e); }
+        .block-url404 { background: linear-gradient(135deg, #b0642e, #864c22); }
+        .block-server5xx { background: linear-gradient(135deg, #b89228, #8c6e1e); }
+        .block-configerr { background: linear-gradient(135deg, #774444, #5c3333); }
+        .block-offline { background: linear-gradient(135deg, #424752, #33373f); }
+
         .mask {
             display: none;
             position: fixed;
@@ -115,7 +158,6 @@
             background: linear-gradient(145deg, #1a1f29, #202530);
             border-radius: 14px;
             overflow: hidden;
-            /* 外发光半径70px，宽度接近0.5cm，高亮灰白色 */
             box-shadow:
                 0 0 0 1px rgba(255,255,255,0.15),
                 0 0 70px rgba(240, 240, 240, 0.22),
@@ -131,7 +173,6 @@
     </style>
 </head>
 <body>
-    <!-- 按钮全部放入容器，横向一行 + 图标 -->
     <div class="btn-group">
         <button id="ctrlBtn" class="btn-start">
             <span>▶</span> 启动服务
@@ -148,16 +189,47 @@
     </div>
 
     <div class="status-title">当前MCP运行状态</div>
+
+    <!-- 新增：状态颜色图例说明区 -->
+    <div class="legend-wrap">
+        <div class="legend-item">
+            <span class="legend-block block-online"></span>
+            <span>在线正常</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-reconnect"></span>
+            <span>连接重连中</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-auth401"></span>
+            <span>401鉴权失败</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-url404"></span>
+            <span>接口404地址错误</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-server5xx"></span>
+            <span>5XX服务异常</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-configerr"></span>
+            <span>配置/脚本缺失错误</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-offline"></span>
+            <span>离线/进程已退出</span>
+        </div>
+    </div>
+
     <div class="mcp-wrap" id="statusBox"></div>
 
-    <!-- 更多信息弹窗 -->
     <div class="mask" id="infoMask" onclick="closeInfoMask()">
         <div class="dialog-box" onclick="event.stopPropagation()">
             <iframe src="info.html" id="infoIframe"></iframe>
         </div>
     </div>
 
-    <!-- 接入点配置弹窗 -->
     <div class="mask" id="addrMask" onclick="closeAddrMask()">
         <div class="dialog-box" onclick="event.stopPropagation()">
             <iframe src="config.html" id="addrIframe"></iframe>
@@ -171,14 +243,36 @@
         const infoIframe = document.getElementById("infoIframe");
         const addrMask = document.getElementById("addrMask");
         const addrIframe = document.getElementById("addrIframe");
-        let running = false;
+        let serviceRunning = false;
 
-        // 读取本地缓存
-        function loadCacheState() {
-            const cache = localStorage.getItem("mcp_running");
-            running = cache === "true";
-            // 切换文字+图标
-            if(running){
+        // 根据状态码匹配样式类（扩充全部5xx识别）
+        function getTagClass(statusStr) {
+            switch(statusStr) {
+                case "online":
+                    return "tag-online";
+                case "reconnecting":
+                    return "tag-reconnect";
+                case "auth_401":
+                    return "tag-auth401";
+                case "url_404":
+                    return "tag-url404";
+                case "server_5xx":
+                    return "tag-server5xx";
+                case "config_error":
+                case "script_missing":
+                    return "tag-configerr";
+                case "process_exit":
+                case "conn_failed":
+                    return "tag-processexit";
+                default:
+                    return "tag-processexit";
+            }
+        }
+
+        // 刷新按钮状态（读取后端真实进程状态，抛弃localStorage）
+        async function refreshServiceBtnState() {
+            serviceRunning = await window.pywebview.api.is_mcp_service_alive();
+            if(serviceRunning){
                 btn.innerHTML = `<span>⏹</span> 关闭服务`;
                 btn.className = "btn-stop";
             }else{
@@ -186,17 +280,11 @@
                 btn.className = "btn-start";
             }
         }
-        // 保存点击状态到缓存
-        function saveCacheState(state) {
-            localStorage.setItem("mcp_running", state);
-        }
 
-        // 跳转MCP配置页面
         function openMcpConfig(){
             window.location.href = "mcp_config.html";
         }
 
-        // ========== 更多信息弹窗 ==========
         function openInfoDialog() {
             infoMask.style.display = "block";
             infoIframe.src = "info.html";
@@ -205,7 +293,6 @@
             infoMask.style.display = "none";
         }
 
-        // ========== 接入点配置弹窗 ==========
         function openAddrDialog() {
             addrMask.style.display = "block";
             addrIframe.src = "config.html";
@@ -214,36 +301,43 @@
             addrMask.style.display = "none";
         }
 
-        // 刷新MCP彩色标签
+        // 渲染完整MCP状态标签，hover显示错误提示
         async function renderMcpStatus() {
-            try {
-                const statusData = await window.pywebview.api.get_mcp_status();
-                statusBox.innerHTML = "";
-                if (!statusData || Object.keys(statusData).length === 0) {
-                    statusBox.innerHTML = "<span style='color:#8892a0'>暂无MCP服务</span>";
-                    return;
-                }
-                for (const [name, info] of Object.entries(statusData)) {
-                    const tag = document.createElement("span");
-                    if (!running) {
-                        tag.className = "mcp-tag tag-stop-all";
-                    } else {
-                        tag.className = "mcp-tag " + (info.running ? "tag-online" : "tag-offline");
-                    }
-                    let text = `${name}`;
-                    if (info.pid) text += ` (PID:${info.pid})`;
-                    tag.innerText = text;
-                    statusBox.appendChild(tag);
-                }
-            } catch (err) {
-                statusBox.innerHTML = "<span style='color:#646c78'>获取中...</span>";
-                console.error("读取MCP状态错误", err);
+            await refreshServiceBtnState();
+            statusBox.innerHTML = "";
+            const statusList = await window.pywebview.api.get_mcp_status();
+
+            if (!Array.isArray(statusList) || statusList.length === 0) {
+                statusBox.innerHTML = "<span style='color:#8892a0'>暂无MCP服务配置</span>";
+                return;
             }
+
+            statusList.forEach(item => {
+                const tag = document.createElement("span");
+                let label = item.target;
+                let tipText = "";
+
+                // MCP后台未启动：强制全部灰色标签，覆盖原有状态色
+                if (!serviceRunning) {
+                    tag.className = "mcp-tag tag-processexit";
+                    tipText = "后台mcp_pipe服务未运行，所有MCP暂不可用";
+                } else {
+                    // 服务已启动，按真实状态上色
+                    const cls = getTagClass(item.status);
+                    tag.className = "mcp-tag " + cls;
+                    tipText = `状态:${item.status}\n重连次数:${item.reconnect_attempt}`;
+                    if(item.last_error) tipText += `\n错误:${item.last_error}`;
+                    if(item.last_online_ts > 0) tipText += `\n最后在线:${new Date(item.last_online_ts*1000).toLocaleString()}`;
+                }
+
+                tag.innerText = label;
+                tag.title = tipText;
+                statusBox.appendChild(tag);
+            });
         }
 
-        // 按钮点击逻辑【已修改，增加地址校验】
+        // 启停按钮点击
         btn.onclick = async ()=>{
-            // 前置校验接入地址
             const wssAddr = await window.pywebview.api.get_mcp_addr();
             if (!wssAddr || wssAddr.trim() === "") {
                 alert("请先编辑并填写MCP接入点WSS地址！");
@@ -251,32 +345,21 @@
                 return;
             }
 
-            if(!running){
+            if(!serviceRunning){
                 await window.pywebview.api.start_mcp()
-                running = true;
             }else{
                 await window.pywebview.api.stop_mcp()
-                running = false;
-            }
-            saveCacheState(running);
-            // 切换按钮文字+图标+样式
-            if(running){
-                btn.innerHTML = `<span>⏹</span> 关闭服务`;
-                btn.className = "btn-stop";
-            }else{
-                btn.innerHTML = `<span>▶</span> 启动服务`;
-                btn.className = "btn-start";
             }
             renderMcpStatus();
         }
 
-        // 页面载入
+        // 页面初始化
         (async function initPage() {
-            loadCacheState();
+            await renderMcpStatus();
         })();
 
-        setTimeout(renderMcpStatus, 500);
-        setInterval(renderMcpStatus, 10000);
+        // 每3秒刷新一次状态，实时回显
+        setInterval(renderMcpStatus, 3000);
     </script>
 </body>
 </html>

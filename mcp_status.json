@@ -1,14 +1,29 @@
-{
-  "aigohotel-mcp": {
-    "running": true,
-    "pid": 3980
+[
+  {
+    "target": "aigohotel-mcp",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1782899854.7887776,
+    "last_error": "",
+    "last_error_ts": 0,
+    "last_update_ts": 1782899930.8506935
   },
-  "local-stdio-calculator": {
-    "running": true,
-    "pid": 23928
+  {
+    "target": "local-stdio-calculator",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1782899854.8022656,
+    "last_error": "",
+    "last_error_ts": 0,
+    "last_update_ts": 1782899930.8506935
   },
-  "amap-maps": {
-    "running": true,
-    "pid": 31408
+  {
+    "target": "amap-maps",
+    "status": "online",
+    "reconnect_attempt": 1,
+    "last_online_ts": 1782899887.209367,
+    "last_error": "",
+    "last_error_ts": 1782899884.895498,
+    "last_update_ts": 1782899930.8506935
   }
-}
+]
