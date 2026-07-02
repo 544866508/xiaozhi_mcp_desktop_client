@@ -354,10 +354,7 @@
         }
 
         // 页面初始化
-        (async function initPage() {
-            await renderMcpStatus();
-        })();
-
+        setTimeout(renderMcpStatus, 50)
         // 每3秒刷新一次状态，实时回显
         setInterval(renderMcpStatus, 3000);
     </script>

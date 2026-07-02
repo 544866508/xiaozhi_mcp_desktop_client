@@ -8,12 +8,12 @@ import json
 
 class Api:
     def __init__(self):
-        self.proc = None
+        self.proc = None  # 纯粹用来保存后台子进程
         self.is_mcp_running = False
         self.mcp_config_path = os.path.join(os.getcwd(), "mcp_config.json")
         self.mcp_status_path = os.path.join(os.getcwd(), "mcp_status.json")
 
-        # 初始化空配置文件
+        # 文件不存在则初始化默认模板
         if not os.path.exists(self.mcp_config_path):
             default_data = {
                 "mcpServers": {}
@@ -56,10 +56,13 @@ class Api:
             print("MCP 已经在运行中...")
             return
 
+        # 核心：根据环境，决定是调用 .py 还是调用 .exe
         if getattr(sys, 'frozen', False):
+            # 打包后：主程序和后台后台可执行文件在同一个目录下
             exe_dir = os.path.dirname(sys.executable)
             cmd = [os.path.join(exe_dir, "mcp_pipe.exe")]
         else:
+            # 开发环境：直接用当前的 python 解释器去运行独立的 mcp_pipe.py
             cmd = [sys.executable, "mcp_pipe.py"]
 
         print(f"🚀 正在拉起独立后台进程: {' '.join(cmd)}")
@@ -82,7 +85,7 @@ class Api:
             self.is_mcp_running = False
             print('MCP 后台已彻底关闭！')
 
-    # 新增接口：查询后台进程是否存活（前端用来真实判断服务启停，抛弃localStorage缓存）
+    # 查询后台进程是否存活，前端用来真实判断服务启停
     def is_mcp_service_alive(self):
         if self.proc is None:
             return False
@@ -95,6 +98,7 @@ if __name__ == "__main__":
     win_width = 1000
     win_height = 700
 
+    # 获取主屏尺寸计算居中坐标
     screen = webview.screens[0]
     x_pos = (screen.width - win_width) // 2
     y_pos = (screen.height - win_height) // 2
@@ -109,5 +113,6 @@ if __name__ == "__main__":
         y=y_pos
     )
 
+    # 窗口关闭时顺手关掉后台
     window.events.closed += api.stop_mcp
     webview.start(gui="edgechromium", icon=icon_file)

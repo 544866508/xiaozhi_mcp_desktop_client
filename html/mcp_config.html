@@ -277,6 +277,8 @@
         </div>
     </div>
 
+<!-- 外部工具JS必须放在业务脚本上方 -->
+<script src="mcpJsonOpt.js"></script>
 <script>
 let mcpData = {};
 let editTargetKey = null;
@@ -366,7 +368,8 @@ async function saveSingleMcp() {
     const jsonStr = document.getElementById("editJson").value.trim();
     let wrapObj;
     try{
-        wrapObj = JSON.parse(jsonStr);
+        // 调用外部独立文件的优化函数
+        wrapObj = optimizeSingleMcpJson(jsonStr);
     }catch(e){
         alert("JSON格式错误："+e.message);
         return;
@@ -377,15 +380,29 @@ async function saveSingleMcp() {
         alert("粘贴内容必须仅包含单个MCP配置，外层只能一个名称key！");
         return;
     }
-    const newName = keys[0];
-    const newConfig = wrapObj[newName];
+    const rawName = keys[0];
+    const newConfig = wrapObj[rawName];
 
-    // 如果是编辑且名称改变，删除旧配置
-    if(editTargetKey && editTargetKey !== newName){
-        delete mcpData.mcpServers[editTargetKey];
+    // ========== 编辑逻辑：编辑时允许覆盖当前key，不自动加后缀 ==========
+    let finalName;
+    if (editTargetKey) {
+        // 编辑模式：如果改了名称才去重，否则直接复用原key
+        if (rawName !== editTargetKey) {
+            const allExistKeys = Object.keys(mcpData.mcpServers);
+            finalName = getSafeNewMcpKey(allExistKeys, rawName);
+            // 删除旧名称配置
+            delete mcpData.mcpServers[editTargetKey];
+        } else {
+            finalName = rawName;
+        }
+    } else {
+        // 新增模式：强制去重，重名自动加(2)(3)
+        const allExistKeys = Object.keys(mcpData.mcpServers);
+        finalName = getSafeNewMcpKey(allExistKeys, rawName);
     }
+
     // 写入新配置
-    mcpData.mcpServers[newName] = newConfig;
+    mcpData.mcpServers[finalName] = newConfig;
 
     await saveFullConfig();
     closeEditMask();

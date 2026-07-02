@@ -3,27 +3,27 @@
     "target": "aigohotel-mcp",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1782899854.7887776,
+    "last_online_ts": 1782964503.4456756,
     "last_error": "",
     "last_error_ts": 0,
-    "last_update_ts": 1782899930.8506935
+    "last_update_ts": 1782964519.2212079
   },
   {
     "target": "local-stdio-calculator",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1782899854.8022656,
+    "last_online_ts": 1782964503.4544857,
     "last_error": "",
     "last_error_ts": 0,
-    "last_update_ts": 1782899930.8506935
+    "last_update_ts": 1782964519.2212079
   },
   {
-    "target": "amap-maps",
-    "status": "online",
+    "target": "amap-maps(3)",
+    "status": "reconnecting",
     "reconnect_attempt": 1,
-    "last_online_ts": 1782899887.209367,
-    "last_error": "",
-    "last_error_ts": 1782899884.895498,
-    "last_update_ts": 1782899930.8506935
+    "last_online_ts": 1782964503.478178,
+    "last_error": "Wait 2s retry, attempt:1",
+    "last_error_ts": 1782964519.0765934,
+    "last_update_ts": 1782964519.2212079
   }
 ]
