@@ -1,29 +1,38 @@
 [
   {
-    "target": "aigohotel-mcp",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1782964503.4456756,
-    "last_error": "",
-    "last_error_ts": 0,
-    "last_update_ts": 1782964519.2212079
-  },
-  {
     "target": "local-stdio-calculator",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1782964503.4544857,
+    "last_online_ts": 1783041145.632189,
     "last_error": "",
     "last_error_ts": 0,
-    "last_update_ts": 1782964519.2212079
+    "last_update_ts": 1783042163.463209
   },
   {
-    "target": "amap-maps(3)",
+    "target": "aigohotel-mcp",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783041145.6504843,
+    "last_error": "",
+    "last_error_ts": 0,
+    "last_update_ts": 1783042163.463209
+  },
+  {
+    "target": "mcd_mcp_server1",
     "status": "reconnecting",
-    "reconnect_attempt": 1,
-    "last_online_ts": 1782964503.478178,
-    "last_error": "Wait 2s retry, attempt:1",
-    "last_error_ts": 1782964519.0765934,
-    "last_update_ts": 1782964519.2212079
+    "reconnect_attempt": 9,
+    "last_online_ts": 1783041879.1871727,
+    "last_error": "Wait 512s retry, attempt:9",
+    "last_error_ts": 1783041887.367637,
+    "last_update_ts": 1783042163.463209
+  },
+  {
+    "target": "12306-mcp",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783041145.6870716,
+    "last_error": "",
+    "last_error_ts": 0,
+    "last_update_ts": 1783042163.463209
   }
 ]

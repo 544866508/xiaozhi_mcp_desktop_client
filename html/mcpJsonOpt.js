@@ -14,7 +14,9 @@ function optimizeSingleMcpJson(jsonString) {
     // 规则2：遍历第二层配置，替换字段映射
     const fieldMap = {
         baseUrl: 'url',
+        base_url: 'url',
         httpUrl: 'url',
+        http_url: 'url',
         desc: 'description'
     };
     for (const serverName of Object.keys(obj)) {
@@ -28,6 +30,11 @@ function optimizeSingleMcpJson(jsonString) {
                 serverCfg[newKey] = serverCfg[oldKey];
                 delete serverCfg[oldKey];
             }
+        }
+
+        // === 新增步骤：处理 type 字段 ===
+        if (serverCfg.type === 'streamable_http') {
+            serverCfg.type = 'streamablehttp';
         }
     }
 

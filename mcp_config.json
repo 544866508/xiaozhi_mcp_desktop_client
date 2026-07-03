@@ -18,15 +18,19 @@
         "Content-Type": "application/json"
       }
     },
-    "amap-maps(3)": {
-      "type": "streamableHttp",
-      "description": "高德地图MCP Server现已覆盖15大核心接口，提供全场景覆盖的地理信息服务，包括生成专属地图、导航到目的地、打车、地理编码、逆地理编码、IP定位、天气查询、骑行路径规划、步行路径规划、驾车路径规划、公交路径规划、距离测量、关键词搜索、周边搜索、详情搜索等。",
-      "isActive": true,
-      "name": "AliyunBailianMCP_amap-maps",
+    "12306-mcp": {
+      "type": "http",
+      "url": "https://mcp.api-inference.modelscope.net/284f8a2815974c/mcp",
       "headers": {
-        "Authorization": "Bearer ${DASHSCOPE_API_KEY}"
-      },
-      "url": "https://dashscope.aliyuncs.com/api/v1/mcps/amap-maps/mcp"
+        "Authorization": "Bearer ms-a7b38ff1-138e-47e9-a157-a8a349b54865"
+      }
+    },
+    "mcd_mcp_server1": {
+      "type": "streamablehttp",
+      "url": "https://mcp.api-inference.modelscope.net/32fffba39c7243/mcp",
+      "headers": {
+        "Authorization": "Bearer ms-eb2efb62-e2cd-42f4-abdd-bc4436e50bcf"
+      }
     }
   }
 }
