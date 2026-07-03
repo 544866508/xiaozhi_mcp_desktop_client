@@ -7,30 +7,54 @@
       "args": [
         "-m",
         "calculator"
-      ]
+      ],
+      "disabled": false
     },
     "aigohotel-mcp": {
       "type": "http",
       "url": "https://mcp.aigohotel.com/mcp",
-      "description": "全国酒店查询、预定、入住接口",
+      "description": "酒店推荐、预定",
       "headers": {
         "Authorization": "Bearer mcp_246a2b31191549d9b31df4ec3c5872ba",
         "Content-Type": "application/json"
-      }
+      },
+      "disabled": false
     },
-    "12306-mcp": {
-      "type": "http",
-      "url": "https://mcp.api-inference.modelscope.net/284f8a2815974c/mcp",
+    "mcd_mcp": {
+      "type": "streamablehttp",
+      "url": "https://mcp.mcd.cn",
+      "headers": {
+        "Authorization": "Bearer 13z0Jp1KqlheYfC8OtYerxPRq3XCdJDK"
+      },
+      "description": "麦当劳恰饭",
+      "disabled": false
+    },
+    "howtocook-mcp": {
+      "type": "streamablehttp",
+      "url": "https://mcp.api-inference.modelscope.net/cc5003e5896347/mcp",
       "headers": {
         "Authorization": "Bearer ms-a7b38ff1-138e-47e9-a157-a8a349b54865"
-      }
+      },
+      "description": "今天吃什么",
+      "disabled": false
     },
-    "mcd_mcp_server1": {
+    "amap-maps": {
       "type": "streamablehttp",
-      "url": "https://mcp.api-inference.modelscope.net/32fffba39c7243/mcp",
+      "url": "https://mcp.api-inference.modelscope.net/954e4923bc4443/mcp",
       "headers": {
-        "Authorization": "Bearer ms-eb2efb62-e2cd-42f4-abdd-bc4436e50bcf"
-      }
+        "Authorization": "Bearer ms-a7b38ff1-138e-47e9-a157-a8a349b54865"
+      },
+      "description": "高德地图",
+      "disabled": false
+    },
+    "12306-mcp": {
+      "type": "streamablehttp",
+      "url": "https://mcp.api-inference.modelscope.net/0886b37144a848/mcp",
+      "headers": {
+        "Authorization": "Bearer ms-a7b38ff1-138e-47e9-a157-a8a349b54865111"
+      },
+      "disabled": false,
+      "description": "火车票查询"
     }
   }
 }

@@ -192,6 +192,55 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #555a66;
         }
+
+        /* 状态开关样式 */
+        .switch-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch-text {
+            font-size:13px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444852;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #367bc9;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
     </style>
 </head>
 <body>
@@ -213,15 +262,17 @@
     <table id="mcpTable">
         <!-- 原生colgroup分配列宽，表头单元格同步宽度，横线永不错位 -->
         <colgroup>
-            <col style="width:22%">
-            <col style="width:15%">
-            <col style="width:48%">
+            <col style="width:20%">
+            <col style="width:13%">
+            <col style="width:12%">
+            <col style="width:40%">
             <col style="width:15%">
         </colgroup>
         <thead>
             <tr>
                 <th>MCP名称</th>
                 <th>调用类型(type)</th>
+                <th>状态</th>
                 <th>描述(description)</th>
                 <th>操作</th>
             </tr>
@@ -239,11 +290,13 @@
                     <li>注意小智MCP识别的字段有type、url、headers，这几个字段请务必保持一致</li>
                     <li>有点MCP粘贴过来字段不一致，比如给的是BaseUrl字段，实际上就是url，字段名需要修改为url，否则启动将报错，后续迭代版本我会做名称自适应</li>
                     <li>description字段用于回显，方便区分MCP用途，最好也填上内容</li>
+                    <li>disabled: false=启用，true=禁用，不填默认启用</li>
                 </ul>
                 <textarea id="editJson" placeholder='{
   "aigohotel-mcp": {
     "type": "http",
-    "url": "https://mcp.aigohotel.com/mcp"
+    "url": "https://mcp.aigohotel.com/mcp",
+    "disabled": false
   }
 }'></textarea>
             </div>
@@ -302,6 +355,15 @@ async function loadConfig() {
 // DOM渲染完成后执行加载
 document.addEventListener('DOMContentLoaded', loadConfig);
 
+// 切换启用/禁用状态
+async function toggleMcpDisabled(name) {
+    const item = mcpData.mcpServers[name];
+    // 不存在disabled则默认false，取反
+    item.disabled = !(item.disabled ?? false);
+    await saveFullConfig();
+    renderTable();
+}
+
 // 渲染表格函数
 function renderTable() {
     const tbody = document.querySelector("#mcpTable tbody");
@@ -311,10 +373,20 @@ function renderTable() {
         const item = servers[name];
         // 读取description，不存在则显示-
         const desc = item.description ?? "-";
+        const isDisabled = item.disabled ?? false;
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${name}</td>
             <td>${item.type || "-"}</td>
+            <td>
+                <label class="switch-wrap">
+                    <span class="switch-text">${isDisabled ? "禁用" : "启用"}</span>
+                    <label class="switch">
+                        <input type="checkbox" ${isDisabled ? "" : "checked"} onchange="toggleMcpDisabled('${name}')">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </td>
             <td>${desc}</td>
             <td>
                 <!-- 固定宽度弹性父容器，按钮强制同行，永不换行 -->
@@ -339,7 +411,8 @@ function openAddDialog() {
     document.getElementById("editJson").value = `{
   "mcp-name": {
     "type": "stdio",
-    "command": ""
+    "command": "",
+    "disabled": false
   }
 }`;
     document.getElementById("editMask").style.display = "flex";
@@ -382,6 +455,11 @@ async function saveSingleMcp() {
     }
     const rawName = keys[0];
     const newConfig = wrapObj[rawName];
+
+    // 不存在disabled字段则默认启用
+    if (newConfig.disabled === undefined) {
+        newConfig.disabled = false;
+    }
 
     // ========== 编辑逻辑：编辑时允许覆盖当前key，不自动加后缀 ==========
     let finalName;
@@ -443,6 +521,11 @@ async function saveBatchJson() {
     const txt = document.getElementById("batchJson").value.trim();
     try{
         mcpData = JSON.parse(txt);
+        // 批量保存时自动补全缺失disabled
+        const servers = mcpData.mcpServers || {};
+        for(let k in servers){
+            if(servers[k].disabled === undefined) servers[k].disabled = false;
+        }
     }catch(e){
         alert("JSON语法错误："+e.message);
         return;

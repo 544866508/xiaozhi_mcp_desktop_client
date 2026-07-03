@@ -1,38 +1,56 @@
 [
   {
+    "target": "12306-mcp",
+    "status": "online",
+    "reconnect_attempt": 12,
+    "last_online_ts": 1783068804.4237432,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068804.4237432,
+    "last_update_ts": 1783068807.489735
+  },
+  {
     "target": "local-stdio-calculator",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783041145.632189,
-    "last_error": "",
-    "last_error_ts": 0,
-    "last_update_ts": 1783042163.463209
+    "last_online_ts": 1783068756.6702185,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068756.6702185,
+    "last_update_ts": 1783068807.489735
   },
   {
     "target": "aigohotel-mcp",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783041145.6504843,
-    "last_error": "",
-    "last_error_ts": 0,
-    "last_update_ts": 1783042163.463209
+    "last_online_ts": 1783068756.6705768,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068756.6705768,
+    "last_update_ts": 1783068807.489735
   },
   {
-    "target": "mcd_mcp_server1",
-    "status": "reconnecting",
-    "reconnect_attempt": 9,
-    "last_online_ts": 1783041879.1871727,
-    "last_error": "Wait 512s retry, attempt:9",
-    "last_error_ts": 1783041887.367637,
-    "last_update_ts": 1783042163.463209
-  },
-  {
-    "target": "12306-mcp",
+    "target": "mcd_mcp",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783041145.6870716,
-    "last_error": "",
-    "last_error_ts": 0,
-    "last_update_ts": 1783042163.463209
+    "last_online_ts": 1783068756.6709688,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068756.6709688,
+    "last_update_ts": 1783068807.489735
+  },
+  {
+    "target": "amap-maps",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783068756.684772,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068756.684772,
+    "last_update_ts": 1783068807.489735
+  },
+  {
+    "target": "howtocook-mcp",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783068756.6852665,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783068756.6852665,
+    "last_update_ts": 1783068807.489735
   }
 ]

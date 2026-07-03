@@ -21,20 +21,54 @@ class Api:
             with open(self.mcp_config_path, "w", encoding="utf-8") as f:
                 json.dump(default_data, f, ensure_ascii=False, indent=2)
 
-    # 前端读取标准状态数组（适配mcp_pipe输出）
+    # # 前端读取标准状态数组（适配mcp_pipe输出）
+    # def get_mcp_status(self):
+    #     if not os.path.exists(self.mcp_status_path):
+    #         return []
+    #     try:
+    #         with open(self.mcp_status_path, "r", encoding="utf-8") as f:
+    #             data = json.load(f)
+    #         # 确保是数组格式
+    #         if not isinstance(data, list):
+    #             return []
+    #         return data
+    #     except Exception as e:
+    #         print("读取状态文件失败", e)
+    #         return []
+
     def get_mcp_status(self):
         if not os.path.exists(self.mcp_status_path):
             return []
         try:
+            # 读取mcp状态文件
             with open(self.mcp_status_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # 确保是数组格式
             if not isinstance(data, list):
                 return []
+
+            # 读取mcp配置信息
+            mcp_servers = {}
+            if os.path.exists(self.mcp_config_path):
+                try:
+                    with open(self.mcp_config_path, "r", encoding="utf-8") as cfg_f:
+                        cfg_raw = json.load(cfg_f)
+                    mcp_servers = cfg_raw.get("mcpServers", {})
+                except Exception as cfg_err:
+                    print("读取mcp配置文件失败", cfg_err)
+
+            # 为每条状态补充配置信息
+            for item in data:
+                target_name = item.get("target", "")
+                server_info = mcp_servers.get(target_name, {})
+                item["type"] = server_info.get("type", "")
+                item["description"] = server_info.get("description", "")
+                item["url"] = server_info.get("url", "")
+
             return data
         except Exception as e:
             print("读取状态文件失败", e)
             return []
+
 
     def read_mcp_config(self):
         with open(self.mcp_config_path, "r", encoding="utf-8") as f:

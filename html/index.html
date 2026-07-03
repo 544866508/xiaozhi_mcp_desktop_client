@@ -314,8 +314,13 @@
 
             statusList.forEach(item => {
                 const tag = document.createElement("span");
-                let label = item.target;
+                // 新增：拼接 name（description），字段兜底
+                const displayName = item.target;
+                const desc = item.description ?? "";
+                let label = displayName;
+                if (desc) label = `${displayName}（${desc}）`;
                 let tipText = "";
+
 
                 // MCP后台未启动：强制全部灰色标签，覆盖原有状态色
                 if (!serviceRunning) {
@@ -325,8 +330,8 @@
                     // 服务已启动，按真实状态上色
                     const cls = getTagClass(item.status);
                     tag.className = "mcp-tag " + cls;
-                    tipText = `状态:${item.status}\n重连次数:${item.reconnect_attempt}`;
-                    if(item.last_error) tipText += `\n错误:${item.last_error}`;
+                    tipText = `状态:${item.status}\n类型:${item.type ?? '-'}\n接入地址:${item.url ?? '-'}\n重连次数:${item.reconnect_attempt}`;
+                    if(item.last_error) tipText += `\n状态描述:${item.last_error}`;
                     if(item.last_online_ts > 0) tipText += `\n最后在线:${new Date(item.last_online_ts*1000).toLocaleString()}`;
                 }
 

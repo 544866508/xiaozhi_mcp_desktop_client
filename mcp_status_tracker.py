@@ -2,6 +2,7 @@ import time
 import json
 import os
 from typing import Optional, Tuple
+import asyncio
 
 # 状态常量，全部隔离在此
 STATUS_ONLINE = "online"
@@ -20,6 +21,7 @@ STATUS_FLUSH_INTERVAL = 2
 
 # 全局状态池，仅本模块持有
 _mcp_global_status: dict[str, dict] = {}
+
 
 
 def init_target_status(target: str):
@@ -108,12 +110,24 @@ def parse_subproc_stderr_log(log_text: str) -> tuple[str, str] | None:
     解析mcp_proxy子进程stderr日志，识别业务HTTP错误
     返回(状态标识, 错误文案)，无匹配返回None
     """
+    # 完整固定文本精确匹配，和401/404写法统一
     if "401 Unauthorized" in log_text:
         return STATUS_AUTH_FAILED, "子进程业务请求401鉴权失败，检查API Key"
     if "404 Not Found" in log_text:
         return STATUS_NOT_FOUND, "子进程请求地址404，URL配置错误"
-    if any(code in log_text for code in ("500", "502", "503", "504", "507")):
-        return STATUS_SERVER_ERR, "子进程收到5xx服务端异常"
+    # 标准完整HTTP 5xx响应字符串，精准匹配真实服务报错
+    if "500 Internal Server Error" in log_text:
+        return STATUS_SERVER_ERR, "子进程收到500服务内部异常"
+    if "502 Bad Gateway" in log_text:
+        return STATUS_SERVER_ERR, "子进程收到502网关错误"
+    if "503 Service Unavailable" in log_text:
+        return STATUS_SERVER_ERR, "子进程收到503服务不可用"
+    if "504 Gateway Timeout" in log_text:
+        return STATUS_SERVER_ERR, "子进程收到504网关超时"
+    if "507 Insufficient Storage" in log_text:
+        return STATUS_SERVER_ERR, "子进程收到507存储空间不足"
+
+    # 无匹配错误返回None
     return None
 
 
@@ -122,3 +136,22 @@ def get_target_current_state(target: str) -> dict:
     if target not in _mcp_global_status:
         init_target_status(target)
     return _mcp_global_status[target]
+
+
+# 在 connect_to_server 内部，gather 任务中增加心跳协程
+async def heartbeat_refresh_online(target):
+    """
+    阶梯心跳：
+    0~10s：2s/次 快速修正残留错误状态
+    10s后：30s/次 低负载兜底保活
+    """
+    start_ts = time.time()
+    while True:
+        now = time.time()
+        elapsed = now - start_ts
+        update_target_status(target, STATUS_ONLINE, "Heartbeat alive")
+        # if elapsed < 10:
+        #     await asyncio.sleep(2)
+        # else:
+        #     await asyncio.sleep(30)
+        await asyncio.sleep(60)

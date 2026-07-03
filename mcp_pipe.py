@@ -27,7 +27,7 @@ from mcp_status_tracker import (
     STATUS_PROCESS_EXIT,
     STATUS_AUTH_FAILED,
     STATUS_NOT_FOUND,
-    STATUS_SERVER_ERR
+    STATUS_SERVER_ERR, heartbeat_refresh_online
 )
 
 # Auto-load environment variables from a .env file if present
@@ -95,7 +95,8 @@ async def connect_to_server(uri, target):
             await asyncio.gather(
                 pipe_websocket_to_process(websocket, process, target),
                 pipe_process_to_websocket(process, websocket, target),
-                pipe_process_stderr_to_terminal(process, target)
+                pipe_process_stderr_to_terminal(process, target),
+                heartbeat_refresh_online(target)  # 心跳监控，用于mcp状态恢复
             )
     except websockets.exceptions.ConnectionClosed as e:
         raise  # Re-throw exception to trigger reconnection
@@ -119,6 +120,8 @@ async def connect_to_server(uri, target):
             if current_st not in fault_states:
                 update_target_status(target, STATUS_PROCESS_EXIT, "MCP subprocess exited")
 
+
+
 async def pipe_websocket_to_process(websocket, process, target):
     """Read data from WebSocket and write to process stdin"""
     try:
@@ -132,6 +135,10 @@ async def pipe_websocket_to_process(websocket, process, target):
                 message = message.decode('utf-8')
             process.stdin.write(message + '\n')
             process.stdin.flush()
+
+            # # 新增：收到ws消息并下发进程，证明链路正常，重置在线（避免断连出现的5xx）
+            # update_target_status(target, STATUS_ONLINE, "Communication normal")
+
     except Exception as e:
         logger.error(f"[{target}] Error in WebSocket to process pipe: {e}")
         raise  # Re-throw exception to trigger reconnection
