@@ -1,56 +1,11 @@
 [
   {
-    "target": "12306-mcp",
-    "status": "online",
-    "reconnect_attempt": 12,
-    "last_online_ts": 1783068804.4237432,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068804.4237432,
-    "last_update_ts": 1783068807.489735
-  },
-  {
     "target": "local-stdio-calculator",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783068756.6702185,
+    "last_online_ts": 1783138498.3716538,
     "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068756.6702185,
-    "last_update_ts": 1783068807.489735
-  },
-  {
-    "target": "aigohotel-mcp",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1783068756.6705768,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068756.6705768,
-    "last_update_ts": 1783068807.489735
-  },
-  {
-    "target": "mcd_mcp",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1783068756.6709688,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068756.6709688,
-    "last_update_ts": 1783068807.489735
-  },
-  {
-    "target": "amap-maps",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1783068756.684772,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068756.684772,
-    "last_update_ts": 1783068807.489735
-  },
-  {
-    "target": "howtocook-mcp",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1783068756.6852665,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783068756.6852665,
-    "last_update_ts": 1783068807.489735
+    "last_error_ts": 1783138498.3716538,
+    "last_update_ts": 1783138498.3716555
   }
 ]
