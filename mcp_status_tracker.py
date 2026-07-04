@@ -15,6 +15,14 @@ STATUS_CONN_FAILED = "conn_failed"
 STATUS_CONFIG_ERR = "config_error"
 STATUS_SCRIPT_MISSING = "script_missing"
 
+
+
+ERROR_LOCK_SECONDS = 5
+# 需要锁定3秒的错误状态（防止前端页面闪烁太快用户观测不到）：仅401、404
+LOCK_ERROR_STATUS = {STATUS_AUTH_FAILED, STATUS_NOT_FOUND}
+
+
+
 # 配置参数隔离
 STATUS_FILE = os.path.join(os.getcwd(), "mcp_status.json")
 STATUS_FLUSH_INTERVAL = 2
@@ -33,8 +41,20 @@ def init_target_status(target: str):
         "last_online_ts": 0,
         "last_error": "",
         "last_error_ts": 0,
-        "last_update_ts": time.time()
+        "last_update_ts": time.time(),
+        "error_lock_until": 0.0
     }
+
+
+def safe_decode(raw: bytes) -> str:
+    """优先utf-8，失败切gbk，非法字符统一替换，绝不抛解码异常"""
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            return raw.decode("gbk", errors="replace")
+        except Exception:
+            return raw.decode("latin-1", errors="replace")
 
 
 def flush_status_to_file():
@@ -50,13 +70,27 @@ def flush_status_to_file():
         pass
 
 
+
 def update_target_status(target: str, status: str, err_msg: str = "", reconnect_cnt: Optional[int] = None):
     """更新单实例状态并立即落盘"""
     if target not in _mcp_global_status:
         init_target_status(target)
     st = _mcp_global_status[target]
-    st["status"] = status
     now = time.time()
+
+
+    # 有未过期锁定，且本次更新不是401/404，直接拦截不更新
+    if st["error_lock_until"] > now and status not in LOCK_ERROR_STATUS:
+        return
+    # 放行后再赋值修改状态
+    st["status"] = status
+    # 当前是401/404，刷新3秒锁定
+    if status in LOCK_ERROR_STATUS:
+        st["error_lock_until"] = now + ERROR_LOCK_SECONDS
+    # 锁定过期清空标记
+    elif st["error_lock_until"] <= now:
+        st["error_lock_until"] = 0.0
+
 
     if reconnect_cnt is not None:
         st["reconnect_attempt"] = reconnect_cnt
@@ -69,6 +103,8 @@ def update_target_status(target: str, status: str, err_msg: str = "", reconnect_
 
     if status == STATUS_ONLINE:
         st["last_online_ts"] = now
+
+
 
     flush_status_to_file()
 
@@ -112,6 +148,7 @@ def parse_subproc_stderr_log(log_text: str) -> tuple[str, str] | None:
     """
     # 完整固定文本精确匹配，和401/404写法统一
     if "401 Unauthorized" in log_text:
+        print('9999999999999999999999999999999999999999999999999999')
         return STATUS_AUTH_FAILED, "子进程业务请求401鉴权失败，检查API Key"
     if "404 Not Found" in log_text:
         return STATUS_NOT_FOUND, "子进程请求地址404，URL配置错误"

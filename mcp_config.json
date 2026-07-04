@@ -9,6 +9,16 @@
         "calculator"
       ],
       "disabled": false
+    },
+    "aigohotel-mcp": {
+      "type": "http",
+      "url": "https://mcp.aigohotel.com/mcp",
+      "description": "酒店推荐、预定",
+      "headers": {
+        "Authorization": "Bearer mcp_246a2b31191549d9b31df4ec3c5872ba11",
+        "Content-Type": "application/json"
+      },
+      "disabled": false
     }
   }
 }

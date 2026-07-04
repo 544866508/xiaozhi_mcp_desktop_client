@@ -3,9 +3,20 @@
     "target": "local-stdio-calculator",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783138498.3716538,
+    "last_online_ts": 1783157573.9342985,
     "last_error": "Heartbeat alive",
-    "last_error_ts": 1783138498.3716538,
-    "last_update_ts": 1783138498.3716555
+    "last_error_ts": 1783157573.9342985,
+    "last_update_ts": 1783157593.7018604,
+    "error_lock_until": 0.0
+  },
+  {
+    "target": "aigohotel-mcp",
+    "status": "auth_401",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783157573.9942222,
+    "last_error": "子进程业务请求401鉴权失败，检查API Key",
+    "last_error_ts": 1783157577.404299,
+    "last_update_ts": 1783157593.7018604,
+    "error_lock_until": 1783157582.404299
   }
 ]
