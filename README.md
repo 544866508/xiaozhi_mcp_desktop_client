@@ -20,6 +20,8 @@
 
 <p>本工具无任何收费功能，如果帮你节省了开发时间、解决了问题，欢迎 去B站三连支持一下 或者去 GitHub 点个 Star</b>，你动动手指就是对我最大的鼓励。</p>
 
+# 使用教程
+bilibili：<a href="https://www.bilibili.com/video/BV11sMu6xEid">https://www.bilibili.com/video/BV11sMu6xEid</a>
 
 
 # 关于项目
