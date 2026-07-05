@@ -287,10 +287,8 @@
             <div class="form-item">
                 <ul style="margin-left:30px">
                     <li>完整MCP配置（粘贴整块JSON，格式示例：{"名称":{...配置}}）</li>
-                    <li>注意小智MCP识别的字段有type、url、headers，这几个字段请务必保持一致</li>
-                    <li>有点MCP粘贴过来字段不一致，比如给的是BaseUrl字段，实际上就是url，字段名需要修改为url，否则启动将报错，后续迭代版本我会做名称自适应</li>
+                    <li>各厂商的MCP复制过来即可，我会自动适配小智MCP的json格式</li>
                     <li>description字段用于回显，方便区分MCP用途，最好也填上内容</li>
-                    <li>disabled: false=启用，true=禁用，不填默认启用</li>
                 </ul>
                 <textarea id="editJson" placeholder='{
   "aigohotel-mcp": {
