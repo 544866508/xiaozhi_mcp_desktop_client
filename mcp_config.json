@@ -6,7 +6,7 @@
       "description": "小智自带测试MCP（计算器）",
       "args": [
         "-m",
-        "calculator"
+        "./local_mcp/calculator"
       ],
       "disabled": false
     }
