@@ -14,16 +14,16 @@ class MyThreadFunc(object):
         self.myThread = threading.Thread(target=func, args=argsTup)
 
     def start(self):
-        print('线程启动')
+        # print('线程启动')
         self.myThread.start()
 
     def state(self):
         status = self.myThread.is_alive()
-        print('线程状态: {0}'.format(status))
+        # print('线程状态: {0}'.format(status))
         return status
 
     def stop(self):
-        print('线程终止')
+        # print('线程终止')
         try:
             for i in range(5):
                 self._async_raise(self.myThread.ident, SystemExit)

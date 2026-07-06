@@ -5,8 +5,16 @@
       "command": "python",
       "description": "小智自带测试MCP（计算器）",
       "args": [
-        "-m",
-        "./local_mcp/calculator"
+        "./local_mcp/calculator.py"
+      ],
+      "disabled": false
+    },
+    "local-stdio-temperature_humidity_monitor": {
+      "type": "stdio",
+      "command": "python",
+      "description": "温湿度监控器",
+      "args": [
+        "./local_mcp/temperature_humidity_monitor.py"
       ],
       "disabled": false
     }
