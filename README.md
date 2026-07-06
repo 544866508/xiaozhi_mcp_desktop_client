@@ -2,7 +2,6 @@
 
 <img src="./docs/img/home_page.png" alt="" width="600">
 <img src="./docs/img/list_mcp.png" alt="" width="600">
-<img src="./docs/img/edt_mcp.png" alt="" width="600">
 
 
 # 介绍
