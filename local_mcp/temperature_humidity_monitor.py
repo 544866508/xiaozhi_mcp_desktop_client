@@ -5,6 +5,8 @@ import logging
 import requests
 import socket
 
+from utils.port_scanning_op import port_scanning
+
 logger = logging.getLogger('TemperatureHumidityMonitor')
 
 # Windows控制台UTF8修复
@@ -15,10 +17,13 @@ if sys.platform == 'win32':
 mcp = FastMCP("TemperatureHumidityMonitor")
 
 # 自动扫描局域网寻找ESP32温湿度设备，端口8051
-def find_esp32_sensor(segment: str = "192.168.1") -> str | None:
+def find_esp32_sensor() -> str | None:
     for i in range(2, 255):
-        ip = f"{segment}.{i}"
-        url = f"http://{ip}:8051/sensor"
+        url_rule = f"sensor/temperature_humidity_monitor"
+        port_scanning(ip_like=[url_rule, ], port_list=[8051, ], url_path_list=url_path_list, max_concurrent=30, timeout_ms=300)
+        res = requests.get(url_rule, timeout=3)
+
+
         try:
             resp = requests.get(url, timeout=0.25)
             if resp.status_code == 200 and "temperature" in resp.text:
