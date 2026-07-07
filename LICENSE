@@ -1,4 +1,4 @@
-MIT License
+MIT License with Commons Clause
 
 Copyright (c) 2026 什么都干的派森
 
@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+===== Commons Clause Supplement =====
+As used herein, "Sell" means offering the Software to third parties for a fee,
+where the primary commercial value of your product/service derives from the
+functionality of this Software.
+This License does NOT grant you the right to Sell the Software, its derivatives,
+or products substantially built upon this Software.
+If you wish to Sell any product relying on this Software, you must obtain a
+separate written commercial license agreement from the copyright holder.

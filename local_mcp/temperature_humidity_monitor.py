@@ -5,7 +5,7 @@ import logging
 import requests
 import socket
 
-from utils.port_scanning_op import port_scanning
+from utils.port_scanning_op import ip_scanning
 
 logger = logging.getLogger('TemperatureHumidityMonitor')
 
@@ -19,13 +19,16 @@ mcp = FastMCP("TemperatureHumidityMonitor")
 # 自动扫描局域网寻找ESP32温湿度设备，端口8051
 def find_esp32_sensor() -> str | None:
     for i in range(2, 255):
-        url_rule = f"sensor/temperature_humidity_monitor"
-        port_scanning(ip_like=[url_rule, ], port_list=[8051, ], url_path_list=url_path_list, max_concurrent=30, timeout_ms=300)
-        res = requests.get(url_rule, timeout=3)
 
+        port = 8051
+        url_path = f"sensor/temperature_humidity_monitor"
+        tgt_ip = ip_scanning(url_path=url_path, port=port, max_concurrent=30, timeout_ms=300)
+        if not tgt_ip: return None
 
+        url = f'http://{tgt_ip}:{port}{url_path}'
+        print(f'url: {url}')
         try:
-            resp = requests.get(url, timeout=0.25)
+            resp = requests.get(url, timeout=0.3)
             if resp.status_code == 200 and "temperature" in resp.text:
                 return url
         except (requests.exceptions.RequestException, socket.timeout):
@@ -50,7 +53,7 @@ def temperature_humidity_monitor(position: str) -> dict:
         if not esp32_url:
             return {
                 "success": False,
-                "msg": "局域网内未扫描到卧室ESP32温湿度设备（端口8051）"
+                "msg": "局域网内未扫描到卧室ESP32温湿度设备"
             }
         try:
             resp = requests.get(esp32_url, timeout=3)
