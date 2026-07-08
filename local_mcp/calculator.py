@@ -20,6 +20,7 @@ mcp = FastMCP("Calculator")
 @mcp.tool()
 def calculator(python_expression: str) -> dict:
     """For mathamatical calculation, always use this tool to calculate the result of a python expression. You can use 'math' or 'random' directly, without 'import'."""
+    print(f'计算公式：{python_expression}')
     result = eval(python_expression, {"math": math, "random": random})
     logger.info(f"Calculating formula: {python_expression}, result: {result}")
     return {"success": True, "result": result}

@@ -52,7 +52,7 @@ def get_default_gateway() -> str | None:
 def get_wifi_suffix_one(ip_like: str,
                         url_path: str,
                         port: int = 8051,
-                        timeout_ms: int = 300,
+                        timeout_ms: int = 500,
                         max_concurrent: int = 30) -> Optional[int]:
     """
     多线程网段端口扫描，只要接口返回200即判定连通
@@ -128,7 +128,7 @@ def get_wifi_suffix_one(ip_like: str,
 
 
 
-def ip_scanning(url_path, port=8051, max_concurrent=30, timeout_ms=300):
+def ip_scanning(url_path, port=8051, max_concurrent=30, timeout_ms=500):
     '''
     根据端口和url规则扫描ip
     :return:
@@ -152,8 +152,8 @@ def ip_scanning(url_path, port=8051, max_concurrent=30, timeout_ms=300):
 if __name__ == "__main__":
 
     port = 8051
-    url_path = "/sensor"
-    tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=300)
+    url_path = "/sensor/temperature_humidity_monitor"
+    tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
 
 
     print(tgt_ip)
@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
     # port = 8051
     # url_path = "/"
-    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=300)
+    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
     #
     #
     # print(tgt_ip)

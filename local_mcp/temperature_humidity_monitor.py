@@ -1,11 +1,40 @@
 # server.py
+import json
+
 from fastmcp import FastMCP
-import sys
+import sys, os
 import logging
 import requests
 import socket
 
 from utils.port_scanning_op import ip_scanning
+
+
+
+
+# def find_config():
+#     with open('./mcp_config.json', 'r', encoding='utf-8') as f:
+#         config = json.load(f)
+#         print(f'config: {config}')
+#         for key, value in config['mcpServers'].items():
+#             if 'args' in value and os.path.basename(__file__) in value['args']:
+#                 return value
+#     return None
+#
+# def find_position():
+#     config_dict = find_config()
+#     if not config_dict: return None
+#     if not 'device' in config_dict:
+#         print('设备未配置！')
+#         return None
+#     return config_dict['device']
+#
+# DEVICE_CONFIG = find_position()
+
+
+# 设备URL
+DEVICE_URL = None
+
 
 logger = logging.getLogger('TemperatureHumidityMonitor')
 
@@ -16,63 +45,56 @@ if sys.platform == 'win32':
 
 mcp = FastMCP("TemperatureHumidityMonitor")
 
-# 自动扫描局域网寻找ESP32温湿度设备，端口8051
+
 def find_esp32_sensor() -> str | None:
-    for i in range(2, 255):
+    # 自动扫描局域网寻找ESP32温湿度设备，端口8051
 
-        port = 8051
-        url_path = f"sensor/temperature_humidity_monitor"
-        tgt_ip = ip_scanning(url_path=url_path, port=port, max_concurrent=30, timeout_ms=300)
-        if not tgt_ip: return None
+    global DEVICE_URL
+    if DEVICE_URL:
+        print(f'加载缓存中的设备链接：{DEVICE_URL}')
+        return DEVICE_URL
 
-        url = f'http://{tgt_ip}:{port}{url_path}'
-        print(f'url: {url}')
-        try:
-            resp = requests.get(url, timeout=0.3)
-            if resp.status_code == 200 and "temperature" in resp.text:
-                return url
-        except (requests.exceptions.RequestException, socket.timeout):
-            continue
+    print('缓存中没有设备链接，开始扫描...')
+    port = 8051
+    url_path = f"/sensor/temperature_humidity_monitor"
+    tgt_ip = ip_scanning(url_path=url_path, port=port, max_concurrent=30, timeout_ms=300)
+    if tgt_ip:
+        DEVICE_URL = f'http://{tgt_ip}:{port}{url_path}'
+        print(f'扫描到设备链接: {DEVICE_URL}')
+        return DEVICE_URL
+
+    print(f'未扫描到设备链接！')
     return None
 
-@mcp.tool()
-def temperature_humidity_monitor(position: str) -> dict:
-    """
-    获取家中指定房间温湿度
-    :param position: 房间名称，可选：卧室 / 书房
-    """
-    print(f"查询房间：{position}")
 
-    if position == "书房":
-        return {
-            "success": True,
-            "result": {"temperature": "35℃", "humidity": "25%"}
-        }
-    elif position == "卧室":
-        esp32_url = find_esp32_sensor()
-        if not esp32_url:
-            return {
-                "success": False,
-                "msg": "局域网内未扫描到卧室ESP32温湿度设备"
-            }
-        try:
-            resp = requests.get(esp32_url, timeout=3)
-            resp.raise_for_status()
-            sensor_data = resp.json()
-            return {
-                "success": True,
-                "result": sensor_data
-            }
-        except requests.exceptions.RequestException as e:
-            return {
-                "success": False,
-                "msg": f"设备访问失败：{str(e)}"
-            }
-    else:
+@mcp.tool()
+def temperature_humidity_monitor() -> dict:
+    """
+    获取我家里温度、湿度时使用这个方法
+    """
+    esp32_url = find_esp32_sensor()
+    if not esp32_url:
         return {
             "success": False,
-            "msg": f"不支持房间[{position}]，仅支持：卧室、书房"
+            "msg": "局域网内未扫描到ESP32温湿度设备"
         }
+    try:
+        resp = requests.get(esp32_url, timeout=3)
+        resp.raise_for_status()
+        sensor_data = resp.json()
+        print(f'当前温湿度检测结果： {sensor_data}')
+        return {
+            "success": True,
+            "result": sensor_data
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "msg": f"设备访问失败：{str(e)}"
+        }
+
+
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
