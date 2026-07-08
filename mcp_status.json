@@ -1,22 +1,22 @@
 [
   {
-    "target": "local-stdio-calculator",
-    "status": "online",
-    "reconnect_attempt": 0,
-    "last_online_ts": 1783484390.7616258,
-    "last_error": "Heartbeat alive",
-    "last_error_ts": 1783484390.7616258,
-    "last_update_ts": 1783484401.4864225,
-    "error_lock_until": 0.0
-  },
-  {
     "target": "local-stdio-temperature_humidity_monitor",
     "status": "online",
     "reconnect_attempt": 0,
-    "last_online_ts": 1783484390.7916753,
+    "last_online_ts": 1783500480.9147062,
     "last_error": "Heartbeat alive",
-    "last_error_ts": 1783484390.7916753,
-    "last_update_ts": 1783484401.4864225,
+    "last_error_ts": 1783500480.9147062,
+    "last_update_ts": 1783500526.3154237,
+    "error_lock_until": 0.0
+  },
+  {
+    "target": "local-stdio-calculator",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1783500480.9154263,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1783500480.9154263,
+    "last_update_ts": 1783500526.3154237,
     "error_lock_until": 0.0
   }
 ]
