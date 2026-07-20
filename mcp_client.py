@@ -21,21 +21,6 @@ class Api:
             with open(self.mcp_config_path, "w", encoding="utf-8") as f:
                 json.dump(default_data, f, ensure_ascii=False, indent=2)
 
-    # # 前端读取标准状态数组（适配mcp_pipe输出）
-    # def get_mcp_status(self):
-    #     if not os.path.exists(self.mcp_status_path):
-    #         return []
-    #     try:
-    #         with open(self.mcp_status_path, "r", encoding="utf-8") as f:
-    #             data = json.load(f)
-    #         # 确保是数组格式
-    #         if not isinstance(data, list):
-    #             return []
-    #         return data
-    #     except Exception as e:
-    #         print("读取状态文件失败", e)
-    #         return []
-
     def get_mcp_status(self):
         if not os.path.exists(self.mcp_status_path):
             return []

@@ -1,0 +1,32 @@
+[
+  {
+    "target": "local-stdio-temperature_humidity_monitor",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1784224950.5082197,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1784224950.5082197,
+    "last_update_ts": 1784224954.4449477,
+    "error_lock_until": 0.0
+  },
+  {
+    "target": "local-stdio-calculator",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1784224950.5095854,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1784224950.5095854,
+    "last_update_ts": 1784224954.4449477,
+    "error_lock_until": 0.0
+  },
+  {
+    "target": "local-stdio-air-conditioning-controller",
+    "status": "online",
+    "reconnect_attempt": 0,
+    "last_online_ts": 1784224950.5101802,
+    "last_error": "Heartbeat alive",
+    "last_error_ts": 1784224950.5101802,
+    "last_update_ts": 1784224954.4449477,
+    "error_lock_until": 0.0
+  }
+]

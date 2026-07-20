@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./str_bg.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 24px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+        .btn-start {
+            background: linear-gradient(135deg, #285b96, #1e4470);
+            color: #f3f4f6;
+        }
+        .btn-start:hover {
+            background: linear-gradient(135deg, #2d68aa, #234e82);
+        }
+        .btn-stop {
+            background: linear-gradient(135deg, #8c3a3a, #6b2c2c);
+            color: #f3f4f6;
+        }
+        .btn-stop:hover {
+            background: linear-gradient(135deg, #9e4242, #7d3333);
+        }
+        .btn-normal {
+            background: linear-gradient(135deg, #272c38, #20242d);
+            color: #d1d5db;
+            border: 1px solid #363c4a;
+        }
+        .btn-normal:hover {
+            background: linear-gradient(135deg, #303744, #262b36);
+        }
+        .mcp-wrap {
+            margin: 12px 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .mcp-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            color: #f3f4f6;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            position: relative;
+            cursor: help;
+        }
+        /* 在线正常 */
+        .tag-online {
+            background: linear-gradient(135deg, #2a5887, #214369);
+        }
+        /* 重连中 */
+        .tag-reconnect {
+            background: linear-gradient(135deg, #6b4896, #4e3570);
+        }
+        /* 401认证失败 */
+        .tag-auth401 {
+            background: linear-gradient(135deg, #a63c3c, #7d2e2e);
+        }
+        /* 404地址错误 */
+        .tag-url404 {
+            background: linear-gradient(135deg, #b0642e, #864c22);
+        }
+        /* 5xx服务故障 */
+        .tag-server5xx {
+            background: linear-gradient(135deg, #b89228, #8c6e1e);
+        }
+        /* 配置错误/脚本缺失 */
+        .tag-configerr {
+            background: linear-gradient(135deg, #774444, #5c3333);
+        }
+        /* 进程退出/离线 */
+        .tag-processexit {
+            background: linear-gradient(135deg, #424752, #33373f);
+        }
+        .status-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin: 12px 0 8px;
+            padding-left: 4px;
+            border-left: 4px solid #3570b0;
+        }
+
+        /* ========== 新增：状态图例样式 ========== */
+        .legend-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 20px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #c0c8d6;
+        }
+        .legend-block {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .block-online { background: linear-gradient(135deg, #2a5887, #214369); }
+        .block-reconnect { background: linear-gradient(135deg, #6b4896, #4e3570); }
+        .block-auth401 { background: linear-gradient(135deg, #a63c3c, #7d2e2e); }
+        .block-url404 { background: linear-gradient(135deg, #b0642e, #864c22); }
+        .block-server5xx { background: linear-gradient(135deg, #b89228, #8c6e1e); }
+        .block-configerr { background: linear-gradient(135deg, #774444, #5c3333); }
+        .block-offline { background: linear-gradient(135deg, #424752, #33373f); }
+
+        .mask {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 999;
+            backdrop-filter: blur(6px);
+        }
+        .dialog-box {
+            width: 640px;
+            height: 78vh;
+            margin: 60px auto 0;
+            background: linear-gradient(145deg, #1a1f29, #202530);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.15),
+                0 0 70px rgba(240, 240, 240, 0.22),
+                0 12px 60px rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .dialog-box iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="btn-group">
+        <button id="ctrlBtn" class="btn-start">
+            <span>▶</span> 启动服务
+        </button>
+        <button class="btn-normal" onclick="openAddrDialog()">
+            <span>🔗</span> 编辑接入点地址
+        </button>
+        <button class="btn-normal" onclick="openMcpConfig()">
+            <span>⚙</span> 配置MCP
+        </button>
+        <button class="btn-normal" onclick="openInfoDialog()">
+            <span>ⓘ</span> 更多信息
+        </button>
+    </div>
+
+    <div class="status-title">当前MCP运行状态</div>
+
+    <!-- 新增：状态颜色图例说明区 -->
+    <div class="legend-wrap">
+        <div class="legend-item">
+            <span class="legend-block block-online"></span>
+            <span>在线正常</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-reconnect"></span>
+            <span>连接重连中</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-auth401"></span>
+            <span>401鉴权失败</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-url404"></span>
+            <span>接口404地址错误</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-server5xx"></span>
+            <span>5XX服务异常</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-configerr"></span>
+            <span>配置/脚本缺失错误</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-block block-offline"></span>
+            <span>离线/进程已退出</span>
+        </div>
+    </div>
+
+    <div class="mcp-wrap" id="statusBox"></div>
+
+    <div class="mask" id="infoMask" onclick="closeInfoMask()">
+        <div class="dialog-box" onclick="event.stopPropagation()">
+            <iframe src="info.html" id="infoIframe"></iframe>
+        </div>
+    </div>
+
+    <div class="mask" id="addrMask" onclick="closeAddrMask()">
+        <div class="dialog-box" onclick="event.stopPropagation()">
+            <iframe src="config.html" id="addrIframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById("ctrlBtn");
+        const statusBox = document.getElementById("statusBox");
+        const infoMask = document.getElementById("infoMask");
+        const infoIframe = document.getElementById("infoIframe");
+        const addrMask = document.getElementById("addrMask");
+        const addrIframe = document.getElementById("addrIframe");
+        let serviceRunning = false;
+
+        // 根据状态码匹配样式类（扩充全部5xx识别）
+        function getTagClass(statusStr) {
+            switch(statusStr) {
+                case "online":
+                    return "tag-online";
+                case "reconnecting":
+                    return "tag-reconnect";
+                case "auth_401":
+                    return "tag-auth401";
+                case "url_404":
+                    return "tag-url404";
+                case "server_5xx":
+                    return "tag-server5xx";
+                case "config_error":
+                case "script_missing":
+                    return "tag-configerr";
+                case "process_exit":
+                case "conn_failed":
+                    return "tag-processexit";
+                default:
+                    return "tag-processexit";
+            }
+        }
+
+        // 刷新按钮状态（读取后端真实进程状态，抛弃localStorage）
+        async function refreshServiceBtnState() {
+            serviceRunning = await window.pywebview.api.is_mcp_service_alive();
+            if(serviceRunning){
+                btn.innerHTML = `<span>⏹</span> 关闭服务`;
+                btn.className = "btn-stop";
+            }else{
+                btn.innerHTML = `<span>▶</span> 启动服务`;
+                btn.className = "btn-start";
+            }
+        }
+
+        function openMcpConfig(){
+            window.location.href = "mcp_config.html";
+        }
+
+        function openInfoDialog() {
+            infoMask.style.display = "block";
+            infoIframe.src = "info.html";
+        }
+        window.closeInfoMask = function() {
+            infoMask.style.display = "none";
+        }
+
+        function openAddrDialog() {
+            addrMask.style.display = "block";
+            addrIframe.src = "config.html";
+        }
+        window.closeAddrMask = function() {
+            addrMask.style.display = "none";
+        }
+
+        // 渲染完整MCP状态标签，hover显示错误提示
+        async function renderMcpStatus() {
+            await refreshServiceBtnState();
+            statusBox.innerHTML = "";
+            const statusList = await window.pywebview.api.get_mcp_status();
+
+            if (!Array.isArray(statusList) || statusList.length === 0) {
+                statusBox.innerHTML = "<span style='color:#8892a0'>暂无MCP服务配置</span>";
+                return;
+            }
+
+            statusList.forEach(item => {
+                const tag = document.createElement("span");
+                // 新增：拼接 name（description），字段兜底
+                const displayName = item.target;
+                const desc = item.description ?? "";
+                let label = displayName;
+                if (desc) label = `${displayName}（${desc}）`;
+                let tipText = "";
+
+
+                // MCP后台未启动：强制全部灰色标签，覆盖原有状态色
+                if (!serviceRunning) {
+                    tag.className = "mcp-tag tag-processexit";
+                    tipText = "后台mcp_pipe服务未运行，所有MCP暂不可用";
+                } else {
+                    // 服务已启动，按真实状态上色
+                    const cls = getTagClass(item.status);
+                    tag.className = "mcp-tag " + cls;
+                    tipText = `状态:${item.status}\n类型:${item.type ?? '-'}\n接入地址:${item.url ?? '-'}\n重连次数:${item.reconnect_attempt}`;
+                    if(item.last_error) tipText += `\n状态描述:${item.last_error}`;
+                    if(item.last_online_ts > 0) tipText += `\n最后在线:${new Date(item.last_online_ts*1000).toLocaleString()}`;
+                }
+
+                tag.innerText = label;
+                tag.title = tipText;
+                statusBox.appendChild(tag);
+            });
+        }
+
+        // 启停按钮点击
+        btn.onclick = async ()=>{
+            const wssAddr = await window.pywebview.api.get_mcp_addr();
+            if (!wssAddr || wssAddr.trim() === "") {
+                alert("请先编辑并填写MCP接入点WSS地址！");
+                openAddrDialog();
+                return;
+            }
+
+            if(!serviceRunning){
+                await window.pywebview.api.start_mcp()
+            }else{
+                await window.pywebview.api.stop_mcp()
+            }
+            renderMcpStatus();
+        }
+
+        // 页面初始化
+        setTimeout(renderMcpStatus, 50)
+        // 每3秒刷新一次状态，实时回显
+        setInterval(renderMcpStatus, 3000);
+    </script>
+</body>
+</html>

@@ -17,6 +17,15 @@
         "./local_mcp/temperature_humidity_monitor.py"
       ],
       "disabled": false
+    },
+    "local-stdio-air-conditioning-controller": {
+      "type": "stdio",
+      "command": "python",
+      "description": "空调控制器",
+      "args": [
+        "./local_mcp/air_conditioning_controller.py"
+      ],
+      "disabled": false
     }
   }
 }

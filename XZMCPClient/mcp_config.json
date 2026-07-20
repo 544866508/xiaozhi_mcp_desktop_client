@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "local-stdio-calculator": {
+      "type": "stdio",
+      "command": "python",
+      "description": "小智自带测试MCP（计算器）",
+      "args": [
+        "./local_mcp/calculator.py"
+      ],
+      "disabled": false
+    },
+    "local-stdio-temperature_humidity_monitor": {
+      "type": "stdio",
+      "command": "python",
+      "description": "温湿度监控器",
+      "args": [
+        "./local_mcp/temperature_humidity_monitor.py"
+      ],
+      "disabled": false
+    },
+    "local-stdio-air-conditioning-controller": {
+      "type": "stdio",
+      "command": "python",
+      "description": "空调控制器",
+      "args": [
+        "./local_mcp/air_conditioning_controller.py"
+      ],
+      "disabled": false
+    }
+  }
+}

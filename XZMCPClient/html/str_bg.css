@@ -1,0 +1,183 @@
+body {
+    padding: 24px;
+    min-height: 100vh;
+    color: #d1d5db;
+    background: #020307;
+    position: relative;
+    /* 底层：中小漂移星+深空渐变，无大星 */
+    background-image:
+        radial-gradient(1.8px 1.8px at 20% 42%, rgba(235,245,255,0.42), transparent),
+        radial-gradient(1.6px 1.6px at 76% 18%, rgba(238,248,255,0.44), transparent),
+        radial-gradient(1.9px 1.9px at 50% 64%, rgba(232,242,255,0.40), transparent),
+        radial-gradient(1.7px 1.7px at 12% 92%, rgba(236,246,255,0.43), transparent),
+        radial-gradient(1.85px 1.85px at 37% 4%, rgba(239,249,255,0.45), transparent),
+        radial-gradient(1.5px 1.5px at 60% 74%, rgba(233,243,255,0.41), transparent),
+        radial-gradient(1.75px 1.75px at 81% 46%, rgba(237,247,255,0.42), transparent),
+        radial-gradient(1.65px 1.65px at 13% 60%, rgba(234,244,255,0.44), transparent),
+        radial-gradient(1px 1px at 42% 10%, rgba(220,235,255,0.32), transparent),
+        radial-gradient(0.9px 0.9px at 66% 52%, rgba(216,230,255,0.30), transparent),
+        radial-gradient(1.1px 1.1px at 28% 58%, rgba(222,237,255,0.33), transparent),
+        radial-gradient(0.85px 0.85px at 90% 40%, rgba(213,228,255,0.28), transparent),
+        radial-gradient(0.95px 0.95px at 5% 30%, rgba(219,234,255,0.31), transparent),
+        radial-gradient(0.8px 0.8px at 54% 90%, rgba(212,227,255,0.29), transparent),
+        radial-gradient(1.05px 1.05px at 78% 10%, rgba(223,238,255,0.34), transparent),
+        radial-gradient(0.78px 0.78px at 31% 42%, rgba(210,225,255,0.27), transparent),
+        radial-gradient(0.92px 0.92px at 58% 28%, rgba(217,232,255,0.30), transparent),
+        radial-gradient(1.02px 1.02px at 18% 76%, rgba(221,236,255,0.32), transparent),
+        radial-gradient(0.88px 0.88px at 45% 34%, rgba(215,230,255,0.29), transparent),
+        radial-gradient(0.98px 0.98px at 84% 64%, rgba(218,233,255,0.31), transparent),
+        linear-gradient(-45deg, #010205, #040813, #020509, #03060c);
+
+    background-size:
+        2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+        2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+        2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+        2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+        2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+        400% 400%;
+
+    animation:
+        starDriftSmall 26s linear infinite,
+        starTwinkleSmall 3.2s ease-in-out infinite alternate,
+        bgFlow 32s linear infinite;
+}
+
+/* 唯一伪层承载6颗缩小后的大星，steps(1)实现瞬灭瞬亮 */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-size: 100% 100%;
+    /* 大星星尺寸全部缩小 原3.2/3/3.4... 改为2/1.9/2.1... */
+    background-image:
+        radial-gradient(2px 2px at 8% 12%, var(--s1), transparent),
+        radial-gradient(1.9px 1.9px at 62% 26%, var(--s2), transparent),
+        radial-gradient(2.1px 2.1px at 91% 72%, var(--s3), transparent),
+        radial-gradient(1.8px 1.8px at 33% 86%, var(--s4), transparent),
+        radial-gradient(1.9px 1.9px at 6% 51%, var(--s5), transparent),
+        radial-gradient(1.8px 1.8px at 45% 8%, var(--s6), transparent);
+    /* steps(1) 无渐变，瞬间切换明暗；慢速不同周期错开闪烁 */
+    animation:
+        s1 12s steps(1) infinite,
+        s2 14s steps(1) infinite,
+        s3 11s steps(1) infinite,
+        s4 15s steps(1) infinite,
+        s5 10s steps(1) infinite,
+        s6 13s steps(1) infinite;
+}
+
+/* 控制每颗星星透明度变量 */
+:root {
+    --s1: rgba(255,255,255,0.55);
+    --s2: rgba(255,255,255,0.52);
+    --s3: rgba(255,255,255,0.58);
+    --s4: rgba(255,255,255,0.50);
+    --s5: rgba(255,255,255,0.54);
+    --s6: rgba(255,255,255,0.51);
+}
+
+/* 瞬亮瞬灭动画：0~50%常亮，50%瞬间变黑，50~100%保持熄灭，末尾瞬间亮起 */
+@keyframes s1 {
+    0%, 49.9% { --s1: rgba(255,255,255,0.55); }
+    50%, 100% { --s1: rgba(255,255,255,0); }
+}
+@keyframes s2 {
+    0%, 49.9% { --s2: rgba(255,255,255,0.52); }
+    50%, 100% { --s2: rgba(255,255,255,0); }
+}
+@keyframes s3 {
+    0%, 49.9% { --s3: rgba(255,255,255,0.58); }
+    50%, 100% { --s3: rgba(255,255,255,0); }
+}
+@keyframes s4 {
+    0%, 49.9% { --s4: rgba(255,255,255,0.50); }
+    50%, 100% { --s4: rgba(255,255,255,0); }
+}
+@keyframes s5 {
+    0%, 49.9% { --s5: rgba(255,255,255,0.54); }
+    50%, 100% { --s5: rgba(255,255,255,0); }
+}
+@keyframes s6 {
+    0%, 49.9% { --s6: rgba(255,255,255,0.51); }
+    50%, 100% { --s6: rgba(255,255,255,0); }
+}
+
+/* 中小星缓慢漂移 */
+@keyframes starDriftSmall {
+    0% {
+        background-position:
+            0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,
+            0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,
+            0 0,0 0,0 0,0 0,
+            0% 50%;
+    }
+    100% {
+        background-position:
+            2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+            2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+            2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+            2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+            2600px 2600px,2600px 2600px,2600px 2600px,2600px 2600px,
+            100% 50%;
+    }
+}
+
+/* 中小星星自身柔和明暗闪烁 */
+@keyframes starTwinkleSmall {
+    0% {
+        background-image:
+            radial-gradient(1.8px 1.8px at 20% 42%, rgba(235,245,255,0.42), transparent),
+            radial-gradient(1.6px 1.6px at 76% 18%, rgba(238,248,255,0.44), transparent),
+            radial-gradient(1.9px 1.9px at 50% 64%, rgba(232,242,255,0.40), transparent),
+            radial-gradient(1.7px 1.7px at 12% 92%, rgba(236,246,255,0.43), transparent),
+            radial-gradient(1.85px 1.85px at 37% 4%, rgba(239,249,255,0.45), transparent),
+            radial-gradient(1.5px 1.5px at 60% 74%, rgba(233,243,255,0.41), transparent),
+            radial-gradient(1.75px 1.75px at 81% 46%, rgba(237,247,255,0.42), transparent),
+            radial-gradient(1.65px 1.65px at 13% 60%, rgba(234,244,255,0.44), transparent),
+            radial-gradient(1px 1px at 42% 10%, rgba(220,235,255,0.32), transparent),
+            radial-gradient(0.9px 0.9px at 66% 52%, rgba(216,230,255,0.30), transparent),
+            radial-gradient(1.1px 1.1px at 28% 58%, rgba(222,237,255,0.33), transparent),
+            radial-gradient(0.85px 0.85px at 90% 40%, rgba(213,228,255,0.28), transparent),
+            radial-gradient(0.95px 0.95px at 5% 30%, rgba(219,234,255,0.31), transparent),
+            radial-gradient(0.8px 0.8px at 54% 90%, rgba(212,227,255,0.29), transparent),
+            radial-gradient(1.05px 1.05px at 78% 10%, rgba(223,238,255,0.34), transparent),
+            radial-gradient(0.78px 0.78px at 31% 42%, rgba(210,225,255,0.27), transparent),
+            radial-gradient(0.92px 0.92px at 58% 28%, rgba(217,232,255,0.30), transparent),
+            radial-gradient(1.02px 1.02px at 18% 76%, rgba(221,236,255,0.32), transparent),
+            radial-gradient(0.88px 0.88px at 45% 34%, rgba(215,230,255,0.29), transparent),
+            radial-gradient(0.98px 0.98px at 84% 64%, rgba(218,233,255,0.31), transparent),
+            linear-gradient(-45deg, #010205, #040813, #020509, #03060c);
+    }
+    100% {
+        background-image:
+            radial-gradient(1.8px 1.8px at 20% 42%, rgba(240,248,255,0.54), transparent),
+            radial-gradient(1.6px 1.6px at 76% 18%, rgba(243,250,255,0.56), transparent),
+            radial-gradient(1.9px 1.9px at 50% 64%, rgba(238,246,255,0.51), transparent),
+            radial-gradient(1.7px 1.7px at 12% 92%, rgba(241,249,255,0.53), transparent),
+            radial-gradient(1.85px 1.85px at 37% 4%, rgba(244,251,255,0.57), transparent),
+            radial-gradient(1.5px 1.5px at 60% 74%, rgba(239,247,255,0.52), transparent),
+            radial-gradient(1.75px 1.75px at 81% 46%, rgba(242,250,255,0.54), transparent),
+            radial-gradient(1.65px 1.65px at 13% 60%, rgba(240,248,255,0.55), transparent),
+            radial-gradient(1px 1px at 42% 10%, rgba(228,242,255,0.44), transparent),
+            radial-gradient(0.9px 0.9px at 66% 52%, rgba(224,238,255,0.40), transparent),
+            radial-gradient(1.1px 1.1px at 28% 58%, rgba(230,244,255,0.45), transparent),
+            radial-gradient(0.85px 0.85px at 90% 40%, rgba(220,235,255,0.36), transparent),
+            radial-gradient(0.95px 0.95px at 5% 30%, rgba(226,240,255,0.42), transparent),
+            radial-gradient(0.8px 0.8px at 54% 90%, rgba(219,233,255,0.38), transparent),
+            radial-gradient(1.05px 1.05px at 78% 10%, rgba(232,246,255,0.46), transparent),
+            radial-gradient(0.78px 0.78px at 31% 42%, rgba(216,230,255,0.34), transparent),
+            radial-gradient(0.92px 0.92px at 58% 28%, rgba(225,239,255,0.41), transparent),
+            radial-gradient(1.02px 1.02px at 18% 76%, rgba(229,243,255,0.43), transparent),
+            radial-gradient(0.88px 0.88px at 45% 34%, rgba(222,237,255,0.39), transparent),
+            radial-gradient(0.98px 0.98px at 84% 64%, rgba(227,241,255,0.42), transparent),
+            linear-gradient(-45deg, #010205, #040813, #020509, #03060c);
+    }
+}
+
+/* 深空底色缓慢流动 */
+@keyframes bgFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}

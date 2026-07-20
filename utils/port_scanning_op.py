@@ -48,7 +48,6 @@ def get_default_gateway() -> str | None:
     return None
 
 
-
 def get_wifi_suffix_one(ip_like: str,
                         url_path: str,
                         port: int = 8051,
@@ -84,7 +83,7 @@ def get_wifi_suffix_one(ip_like: str,
         try:
             resp = requests.get(full_url, timeout=req_timeout)
             # 仅判断状态码200，连通即命中
-            if resp.status_code == 200:
+            if resp.status_code in [200, 400]:
                 with pool_lock:
                     found_result = suffix
                 print(f"✅ 连通成功：{full_url}，IP尾段：{suffix}")
@@ -151,23 +150,34 @@ def ip_scanning(url_path, port=8051, max_concurrent=30, timeout_ms=500):
 
 if __name__ == "__main__":
 
+    # port = 8051
+    # url_path = "/sensor/temperature_humidity_monitor"
+    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
+    # print(tgt_ip)
+    # url = f'http://{tgt_ip}:{port}{url_path}'
+    # print(url)
+
+
+
+    # port = 8051
+    # url_path = "/ir/wc/start"
+    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
+    # print(tgt_ip)
+    # url = f'http://{tgt_ip}:{port}{url_path}'
+    # print(url)
+
+
     port = 8051
-    url_path = "/sensor/temperature_humidity_monitor"
+    url_path = "/controller/air_conditioning"
     tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
-
-
     print(tgt_ip)
     url = f'http://{tgt_ip}:{port}{url_path}'
     print(url)
 
 
-
-
     # port = 8051
     # url_path = "/"
     # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
-    #
-    #
     # print(tgt_ip)
     # url = f'http://{tgt_ip}:{port}{url_path}'
     # print(url)

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>配置MCP接入地址</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+        body {
+            padding: 24px;
+            background-color: #17171a;
+            height: 100vh;
+        }
+        .tip {
+            font-size: 18px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 16px;
+            padding-left: 4px;
+            border-left: 4px solid #409eff;
+        }
+        #addrTextarea {
+            width: 100%;
+            font-size: 15px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            min-height: 350px;
+            resize: none;
+            border: 1px solid #313238;
+            border-radius: 8px;
+            background: #23242a;
+            color: #f0f0f0;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        #addrTextarea::placeholder {
+            color: #888a96;
+        }
+        #addrTextarea:focus {
+            outline: none;
+            border-color: #409eff;
+            box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.15);
+        }
+        /* 按钮容器 靠右排列 */
+        .btn-box {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 24px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        #submitBtn {
+            background: linear-gradient(135deg, #409eff, #2979e2);
+            color: #fff;
+        }
+        #submitBtn:hover {
+            background: linear-gradient(135deg, #338eeb, #226bcc);
+        }
+        #cancelBtn {
+            background: #2c2d34;
+            color: #e0e0e0;
+            border: 1px solid #3b3c44;
+        }
+        #cancelBtn:hover {
+            background: #383942;
+        }
+    </style>
+</head>
+<body>
+    <div class="tip">请输入MCP接入点WSS地址：</div>
+    <textarea id="addrTextarea" placeholder="例如：wss://xxx.xxx.com/mcp"></textarea>
+
+    <!-- 按钮靠右，取消在确定右侧 -->
+    <div class="btn-box">
+        <button id="submitBtn">确定</button>
+        <button id="cancelBtn">取消</button>
+    </div>
+
+    <script>
+        const textarea = document.getElementById("addrTextarea");
+        const submitBtn = document.getElementById("submitBtn");
+        const cancelBtn = document.getElementById("cancelBtn");
+
+        // 文本框自适应高度
+        function autoResize(el) {
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+        }
+        textarea.addEventListener("input", () => autoResize(textarea));
+
+        // 读取存储的WSS地址，直接调用父窗口pywebview
+        async function loadAddress() {
+            try {
+                const oldAddr = await parent.window.pywebview.api.get_mcp_addr();
+                if (oldAddr) {
+                    textarea.value = oldAddr;
+                    autoResize(textarea);
+                }
+            } catch (err) {
+                console.error("读取地址失败：", err);
+            }
+        }
+
+        // DOM加载完成自动填充地址
+        document.addEventListener('DOMContentLoaded', loadAddress);
+
+        // 确定按钮：保存地址并关闭弹窗
+        submitBtn.onclick = async () => {
+            const val = textarea.value.trim();
+            if (!val) {
+                alert("地址不能为空！");
+                return;
+            }
+            await parent.window.pywebview.api.save_mcp_addr(val);
+            parent.closeAddrMask();
+        }
+
+        // 取消按钮：直接关闭弹窗，不保存
+        cancelBtn.onclick = () => {
+            parent.closeAddrMask();
+        }
+    </script>
+</body>
+</html>
