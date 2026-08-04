@@ -19,7 +19,7 @@ def loop_request_air():
             print(f"【请求失败】未知异常：{str(e)}")
 
         # 间隔5秒再发起下一次请求
-        time.sleep(5)
+        time.sleep(3)
 
 
 if __name__ == "__main__":
@@ -28,3 +28,6 @@ if __name__ == "__main__":
         loop_request_air()
     except KeyboardInterrupt:
         print("\n程序已手动停止")
+
+
+

@@ -48,48 +48,79 @@ def get_default_gateway() -> str | None:
     return None
 
 
+import threading
+import time
+import requests
+import socket
+from typing import Optional, List
+
+
+import threading
+import time
+import socket
+import requests
+from typing import List
+
+# 假设你已定义 MyThreadFunc，示例占位
+class MyThreadFunc(threading.Thread):
+    def __init__(self, target, args):
+        super().__init__(target=target, args=args)
+        self._target = target
+        self._args = args
+
+    def state(self):
+        return self.is_alive()
+
+
 def get_wifi_suffix_one(ip_like: str,
                         url_path: str,
                         port: int = 8051,
                         timeout_ms: int = 500,
                         max_concurrent: int = 30) -> Optional[int]:
     """
-    多线程网段端口扫描，只要接口返回200即判定连通
+    多线程网段扫描，命中第一个符合条件设备立即停止扫描并返回IP尾段
+    接口返回200/400判定连通；找不到设备返回 None
     :param ip_like: 网段模板 "192.168.1.*"
     :param url_path: 接口路径，如 "/sensor"
-    :param port: 扫描端口，如 8051
+    :param port: 扫描端口
     :param max_concurrent: 最大并发线程数量
-    :param timeout_ms: HTTP请求超时时间，单位毫秒
-    :return: 第一个连通IP最后一段数字 / None
+    :param timeout_ms: HTTP请求超时，单位毫秒
+    :return: 首个连通IP最后一段数字，无设备返回 None
     """
     seg_prefix = ip_like.rstrip(".*")
     host_suffix_list = list(range(2, 255))
     total = len(host_suffix_list)
     req_timeout = timeout_ms / 1000
 
-    found_result: Optional[int] = None
+    found_suffix: Optional[int] = None
     finished_count = 0
     thread_pool: list[MyThreadFunc] = []
     pool_lock = threading.Lock()
+    stop_event = threading.Event()
 
     def scan_task(suffix: int):
-        nonlocal found_result, finished_count
-        with pool_lock:
-            if found_result is not None:
-                return
-        current_ip = f"{seg_prefix}.{suffix}"
+        nonlocal finished_count
+        if stop_event.is_set():
+            return
 
+        current_ip = f"{seg_prefix}.{suffix}"
         full_url = f"http://{current_ip}:{port}{url_path}"
+        print(full_url)
+
         try:
             resp = requests.get(full_url, timeout=req_timeout)
-            # 仅判断状态码200，连通即命中
             if resp.status_code in [200, 400]:
+                nonlocal found_suffix
                 with pool_lock:
-                    found_result = suffix
+                    found_suffix = suffix
                 print(f"✅ 连通成功：{full_url}，IP尾段：{suffix}")
+                stop_event.set()
                 return
         except (requests.exceptions.RequestException, socket.timeout):
             pass
+
+        if stop_event.is_set():
+            return
 
         with pool_lock:
             finished_count += 1
@@ -97,8 +128,9 @@ def get_wifi_suffix_one(ip_like: str,
 
     idx = 0
     while idx < len(host_suffix_list):
-        if found_result is not None:
+        if stop_event.is_set():
             break
+
         alive_num = sum(1 for t in thread_pool if t.state())
         if alive_num >= max_concurrent:
             time.sleep(0.05)
@@ -110,24 +142,23 @@ def get_wifi_suffix_one(ip_like: str,
         t.start()
         idx += 1
 
+    # 等待现有运行中的线程自然结束（requests无法强制杀死）
     while True:
         all_done = all(not t.state() for t in thread_pool)
-        if all_done or found_result is not None:
+        if all_done:
             break
         time.sleep(0.1)
 
-    if found_result is not None:
-        print(f"检测到可连通地址，IP尾段：{found_result}，终止全部扫描线程...")
-        for t in thread_pool:
-            if t.state():
-                t.stop()
+    if found_suffix is not None:
+        print(f"✅ 扫描提前终止，首个设备尾段：{found_suffix}")
     else:
-        print("❌ 全部扫描完成，无200可连通地址")
-    return found_result
+        print("❌ 全部扫描完成，未找到200/400可连通地址")
+
+    return found_suffix
 
 
 
-def ip_scanning(url_path, port=8051, max_concurrent=30, timeout_ms=500):
+def ip_scanning(url_path, port=8051, max_concurrent=10, timeout_ms=200):
     '''
     根据端口和url规则扫描ip
     :return:
@@ -167,13 +198,26 @@ if __name__ == "__main__":
     # print(url)
 
 
+    # port = 8051
+    # url_path = "/controller/air_conditioning"
+    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
+    # print(tgt_ip)
+    # url = f'http://{tgt_ip}:{port}{url_path}'
+    # print(url)
+
+    # port = 8051
+    # url_path = "/local_mcp/controller__air_conditioner__home_office"
+    # tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
+    # print(tgt_ip)
+    # url = f'http://{tgt_ip}:{port}{url_path}'
+    # print(url)
+
     port = 8051
-    url_path = "/controller/air_conditioning"
+    url_path = "/local_mcp/controller__toilet"
     tgt_ip = ip_scanning(url_path, port=port, max_concurrent=30, timeout_ms=500)
     print(tgt_ip)
     url = f'http://{tgt_ip}:{port}{url_path}'
     print(url)
-
 
     # port = 8051
     # url_path = "/"

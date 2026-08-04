@@ -129,7 +129,7 @@ async def pipe_websocket_to_process(websocket, process, target):
         while True:
             # Read message from WebSocket
             message = await websocket.recv()
-            logger.debug(f"[{target}] << {message[:120]}...")
+            logger.debug(f"[{target}] << {message}")
 
             # Write to process stdin (in text mode)
             if isinstance(message, bytes):
@@ -160,7 +160,7 @@ async def pipe_process_to_websocket(process, websocket, target):
                 break
 
             # Send data to WebSocket
-            logger.debug(f"[{target}] >> {data[:120]}...")
+            logger.debug(f"[{target}] >> {data}")
             # In text mode, data is already a string, no need to decode
             await websocket.send(data)
     except Exception as e:

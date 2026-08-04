@@ -4,28 +4,42 @@
       "type": "stdio",
       "command": "python",
       "description": "小智自带测试MCP（计算器）",
-      "args": [
-        "./local_mcp/calculator.py"
-      ],
-      "disabled": false
+      "args": ["-m", "local_mcp.calculator"],
+      "disabled": true
     },
-    "local-stdio-temperature_humidity_monitor": {
+"MCP_NAME": {
+    "disabled": true,
       "type": "stdio",
       "command": "python",
-      "description": "温湿度监控器",
-      "args": [
-        "./local_mcp/temperature_humidity_monitor.py"
-      ],
-      "disabled": false
-    },
-    "local-stdio-air-conditioning-controller": {
-      "type": "stdio",
-      "command": "python",
-      "description": "空调控制器",
-      "args": [
-        "./local_mcp/air_conditioning_controller.py"
-      ],
-      "disabled": false
+      "args": ["-m", "local_mcp.CONTROLLER_NAME"],
+      "description": "红外控制示例MCP",
+      "irCtl": {
+        "instructions": "设备说明",
+        "cmd": {
+          "rawCmdList": [
+            {"cmdName": "命令名称1", "rawData": [2333, 2444]},
+            {"cmdName": "命令名称2", "rawData": [2555, 2666]},
+            {"cmdName": "命令名称3", "rawData": [2777, 2888]}
+          ],
+          "seqCmdList": [
+            {
+              "cmdName": "组合命令名称1",
+              "steps": [
+                {"cmdName": "命令名称1", "delayAfter": 600000},
+                {"cmdName": "命令名称2", "delayAfter": 0}
+              ]
+            },
+            {
+              "cmdName": "组合命令名称2",
+              "steps": [
+                {"cmdName": "命令名称1", "delayAfter": 600000},
+                {"cmdName": "命令名称2", "delayAfter": 1800000},
+                {"cmdName": "命令名称3", "delayAfter": 0}
+              ]
+            }
+          ]
+        }
+      }
     }
-  }
+}
 }

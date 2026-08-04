@@ -95,7 +95,7 @@
             border-bottom: none;
         }
         pre {
-            white-space: pre-wrap;
+            white-space: pre;
             max-width: 320px;
             max-height: 140px;
             overflow: auto;
@@ -164,6 +164,9 @@
             font-family: monospace;
             margin: 10px 0;
             resize: none;
+            white-space: pre;      /* 不自动折行，按原始代码行展示 */
+            overflow-x: auto;      /* 开启横向滚动条 */
+            overflow-y: auto;      /* 开启纵向滚动条 */
         }
         /* 弹窗按钮右对齐容器 */
         .dialog-btns {
@@ -254,13 +257,12 @@
                 <span>✛</span> 新增MCP工具
             </button>
             <button class="btn-normal" onclick="openBatchEdit()">
-                <span>✎</span> 批量修改(编辑完整JSON)
+                <span>✎</span> 批量修改文本
             </button>
         </div>
     </div>
 
     <table id="mcpTable">
-        <!-- 原生colgroup分配列宽，表头单元格同步宽度，横线永不错位 -->
         <colgroup>
             <col style="width:20%">
             <col style="width:13%">
@@ -280,38 +282,29 @@
         <tbody></tbody>
     </table>
 
-    <!-- 新增/编辑单行弹窗（已移除单独名称输入框） -->
+    <!-- 新增/编辑单行弹窗 -->
     <div class="mask" id="editMask">
         <div class="dialog">
             <h3 id="dialogTitle">新增MCP</h3>
             <div class="form-item">
-                <ul style="margin-left:30px">
-                    <li>完整MCP配置（粘贴整块JSON，格式示例：{"名称":{...配置}}）</li>
-                    <li>各厂商的MCP复制过来即可，我会自动适配小智MCP的json格式</li>
-                    <li>description字段用于回显，方便区分MCP用途，最好也填上内容</li>
-                </ul>
-                <textarea id="editJson" placeholder='{
-  "aigohotel-mcp": {
-    "type": "http",
-    "url": "https://mcp.aigohotel.com/mcp",
-    "disabled": false
-  }
-}'></textarea>
+                <textarea id="editJson" placeholder='{\n  "mcp-name": {\n    "type": "stdio",\n    "command": "",\n    "disabled": false\n  }\n}'></textarea>
             </div>
+
             <div class="dialog-btns">
-                <button class="btn-primary" onclick="saveSingleMcp()">保存</button>
+                <button id="genIrCodeWrap" style="display:none;" class="btn-primary" onclick="genTerminalIrCode()">📟 生成终端控制代码</button>
+                <button class="btn-primary" onclick="saveSingleMcp()">保存文本</button>
                 <button class="btn-normal" onclick="closeEditMask()">取消</button>
             </div>
         </div>
     </div>
 
-    <!-- 批量编辑完整JSON弹窗 -->
+    <!-- 批量编辑完整文本弹窗 -->
     <div class="mask" id="batchMask">
         <div class="dialog">
-            <h3>批量编辑 mcp_config.json</h3>
+            <h3>批量编辑文本 (mcp_config.json)</h3>
             <textarea id="batchJson"></textarea>
             <div class="dialog-btns">
-                <button class="btn-primary" onclick="saveBatchJson()">保存并刷新</button>
+                <button class="btn-primary" onclick="saveBatchJson()">原样保存并刷新</button>
                 <button class="btn-normal" onclick="closeBatchMask()">取消</button>
             </div>
         </div>
@@ -328,21 +321,128 @@
         </div>
     </div>
 
-<!-- 外部工具JS必须放在业务脚本上方 -->
+    <!-- irCtl结果弹窗 -->
+    <div class="mask" id="irResultMask">
+        <div class="dialog" style="width:700px;">
+            <h3>irCtl 生成结果</h3>
+            <pre id="irResultPre" style="max-height:400px;overflow:auto;min-width:650px;"></pre>
+            <div class="dialog-btns">
+                <button class="btn-primary" onclick="copyIrResult()">📋复制全部</button>
+                <button class="btn-normal" onclick="closeIrResultMask()">关闭</button>
+            </div>
+        </div>
+    </div>
+
 <script src="mcpJsonOpt.js"></script>
 <script>
-let mcpData = {};
+let rawConfigText = ""; // 保存最原始的文本内容
+let mcpData = {};       // 仅用于渲染表格的只读视图
 let editTargetKey = null;
 
-// 等待pywebview初始化完成再读取配置
+// 转义正则表达式特殊字符
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// 在原始文本中按字符精确查找指定 MCP key 的位置区间
+function getMcpBlockRange(text, key) {
+    const mcpMatch = /"mcpServers"\s*:/.exec(text);
+    if (!mcpMatch) return null;
+
+    const searchStart = mcpMatch.index + mcpMatch[0].length;
+    const keyRegex = new RegExp(`"${escapeRegExp(key)}"\\s*:`, 'g');
+    keyRegex.lastIndex = searchStart;
+    const match = keyRegex.exec(text);
+    if (!match) return null;
+
+    const startIdx = match.index;
+    const braceStart = text.indexOf('{', startIdx + match[0].length);
+    if (braceStart === -1) return null;
+
+    let depth = 0;
+    let braceEnd = -1;
+    let inString = false;
+    let escape = false;
+
+    for (let i = braceStart; i < text.length; i++) {
+        const char = text[i];
+        if (escape) { escape = false; continue; }
+        if (char === '\\') { escape = true; continue; }
+        if (char === '"') { inString = !inString; continue; }
+        if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+                depth--;
+                if (depth === 0) {
+                    braceEnd = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (braceEnd === -1) return null;
+    return { start: startIdx, end: braceEnd + 1 };
+}
+
+// 将新 MCP 节点插入到 rawConfigText 的 mcpServers 内部
+function insertNewMcpSnippet(text, snippet) {
+    const mcpMatch = /"mcpServers"\s*:\s*\{/.exec(text);
+    if (!mcpMatch) {
+        return `{\n  "mcpServers": {\n${snippet}\n  }\n}`;
+    }
+
+    const startSearch = mcpMatch.index + mcpMatch[0].length;
+    let depth = 1;
+    let closingBraceIdx = -1;
+    let inString = false;
+    let escape = false;
+
+    for (let i = startSearch; i < text.length; i++) {
+        const char = text[i];
+        if (escape) { escape = false; continue; }
+        if (char === '\\') { escape = true; continue; }
+        if (char === '"') { inString = !inString; continue; }
+        if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+                depth--;
+                if (depth === 0) {
+                    closingBraceIdx = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (closingBraceIdx === -1) return text;
+
+    const contentInside = text.substring(startSearch, closingBraceIdx).trim();
+    const prefix = text.substring(0, closingBraceIdx);
+    const suffix = text.substring(closingBraceIdx);
+
+    if (contentInside.length > 0) {
+        const needsComma = !/,\s*$/.test(contentInside);
+        return prefix + (needsComma ? ",\n" : "\n") + snippet + "\n" + suffix;
+    } else {
+        return prefix + "\n" + snippet + "\n" + suffix;
+    }
+}
+
+// 读取文本配置
 async function loadConfig() {
     while (!window.pywebview) {
         await new Promise(resolve => setTimeout(resolve, 50));
     }
     try {
-        const rawText = await window.pywebview.api.read_mcp_config();
-        console.log("读取到MCP配置JSON：", rawText);
-        mcpData = JSON.parse(rawText);
+        rawConfigText = await window.pywebview.api.read_mcp_config();
+        console.log("读取到原始配置文本：\n", rawConfigText);
+        try {
+            mcpData = JSON.parse(rawConfigText);
+        } catch (e) {
+            console.warn("文本仅作只读表格解析，可能包含自定义排版：", e);
+            mcpData = { mcpServers: {} };
+        }
         renderTable();
     } catch (err) {
         console.error("读取MCP配置失败：", err);
@@ -350,26 +450,47 @@ async function loadConfig() {
     }
 }
 
-// DOM渲染完成后执行加载
 document.addEventListener('DOMContentLoaded', loadConfig);
 
-// 切换启用/禁用状态
+// 保持文本原样写回磁盘
+async function saveRawConfig(text) {
+    rawConfigText = text;
+    try {
+        mcpData = JSON.parse(text);
+    } catch (e) {
+        // 解析失败仅影响表格显示，不阻止文本原样写回
+    }
+    await window.pywebview.api.write_mcp_config(text);
+}
+
+// 切换启用/禁用状态（切片修改文本）
 async function toggleMcpDisabled(name) {
-    const item = mcpData.mcpServers[name];
-    // 不存在disabled则默认false，取反
-    item.disabled = !(item.disabled ?? false);
-    await saveFullConfig();
+    const range = getMcpBlockRange(rawConfigText, name);
+    if (range) {
+        let blockText = rawConfigText.substring(range.start, range.end);
+        if (/"disabled"\s*:\s*true/.test(blockText)) {
+            blockText = blockText.replace(/"disabled"\s*:\s*true/, '"disabled": false');
+        } else if (/"disabled"\s*:\s*false/.test(blockText)) {
+            blockText = blockText.replace(/"disabled"\s*:\s*false/, '"disabled": true');
+        } else {
+            const firstBrace = blockText.indexOf('{');
+            if (firstBrace !== -1) {
+                blockText = blockText.substring(0, firstBrace + 1) + '\n    "disabled": true,' + blockText.substring(firstBrace + 1);
+            }
+        }
+        rawConfigText = rawConfigText.substring(0, range.start) + blockText + rawConfigText.substring(range.end);
+        await saveRawConfig(rawConfigText);
+    }
     renderTable();
 }
 
-// 渲染表格函数
+// 渲染表格
 function renderTable() {
     const tbody = document.querySelector("#mcpTable tbody");
     tbody.innerHTML = "";
     const servers = mcpData.mcpServers || {};
     for(const name of Object.keys(servers)){
-        const item = servers[name];
-        // 读取description，不存在则显示-
+        const item = servers[name] || {};
         const desc = item.description ?? "-";
         const isDisabled = item.disabled ?? false;
         const tr = document.createElement("tr");
@@ -387,7 +508,6 @@ function renderTable() {
             </td>
             <td>${desc}</td>
             <td>
-                <!-- 固定宽度弹性父容器，按钮强制同行，永不换行 -->
                 <div style="width:150px;display:flex;gap:8px;align-items:center;">
                     <button class="btn-normal" style="padding:6px 12px;font-size:14px;gap:4px;" onclick="openEditDialog('${name}')">
                         <span>✎</span> 编辑
@@ -402,90 +522,98 @@ function renderTable() {
     }
 }
 
-// 新增弹窗
+// 新增弹窗（最外层带括号，构成完整JSON）
 function openAddDialog() {
     editTargetKey = null;
     document.getElementById("dialogTitle").innerText = "新增MCP工具";
-    document.getElementById("editJson").value = `{
-  "mcp-name": {
-    "type": "stdio",
-    "command": "",
-    "disabled": false
-  }
-}`;
+    document.getElementById("editJson").value = `{\n  "mcp-name": {\n    "type": "stdio",\n    "command": "",\n    "disabled": false\n  }\n}`;
     document.getElementById("editMask").style.display = "flex";
+    checkHasIrCtlField();
 }
 
-// 编辑单行弹窗：自动生成完整外层JSON填入编辑框
+// 编辑单条 MCP：提取原始文本片段并包裹最外层括号
 function openEditDialog(name) {
     editTargetKey = name;
     document.getElementById("dialogTitle").innerText = "编辑MCP";
-    // 组装成完整外层结构给用户编辑
-    const tempWrap = {};
-    tempWrap[name] = mcpData.mcpServers[name];
-    document.getElementById("editJson").value = JSON.stringify(tempWrap, null, 2);
+    const range = getMcpBlockRange(rawConfigText, name);
+    if (range) {
+        const snippet = rawConfigText.substring(range.start, range.end);
+        document.getElementById("editJson").value = `{\n  ${snippet}\n}`;
+    } else {
+        const tempWrap = {};
+        if (mcpData.mcpServers && mcpData.mcpServers[name]) {
+            tempWrap[name] = mcpData.mcpServers[name];
+        }
+        document.getElementById("editJson").value = JSON.stringify(tempWrap, null, 2);
+    }
     document.getElementById("editMask").style.display = "flex";
+    checkHasIrCtlField();
 }
 
 function closeEditMask(){
     document.getElementById("editMask").style.display = "none";
 }
 
-// 保存单行新增/编辑（自动解析外层key）
+// 保存单条 MCP 文本：剥离最外层包裹的括号后插入 rawConfigText
 async function saveSingleMcp() {
     while (!window.pywebview) {
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    const jsonStr = document.getElementById("editJson").value.trim();
-    let wrapObj;
-    try{
-        // 调用外部独立文件的优化函数
-        wrapObj = optimizeSingleMcpJson(jsonStr);
-    }catch(e){
-        alert("JSON格式错误："+e.message);
-        return;
-    }
-    // 外层只能有一个key（单个MCP配置）
-    const keys = Object.keys(wrapObj);
-    if (keys.length !== 1) {
-        alert("粘贴内容必须仅包含单个MCP配置，外层只能一个名称key！");
-        return;
-    }
-    const rawName = keys[0];
-    const newConfig = wrapObj[rawName];
+    let rawInput = document.getElementById("editJson").value.trim();
+    if (!rawInput) return;
 
-    // 不存在disabled字段则默认启用
-    if (newConfig.disabled === undefined) {
-        newConfig.disabled = false;
+    // ==========新增JSON格式校验开始==========
+    try {
+        // 先校验当前编辑框输入是否合法JSON
+        JSON.parse(rawInput);
+    } catch (parseErr) {
+        alert(`JSON格式校验失败：\n${parseErr.message}\n请修正JSON语法后再保存`);
+        return; // 格式错误直接终止保存流程
+    }
+    // ==========新增JSON格式校验结束==========
+
+    // ================= 开始：新增重名处理 =================
+    if (!editTargetKey) {
+        const matchKey = rawInput.match(/^\s*\{\s*"([^"]+)"\s*:/);
+        if (matchKey) {
+            let mcpName = matchKey[1];
+            const existingKeys = mcpData.mcpServers ? Object.keys(mcpData.mcpServers) : [];
+
+            // 使用你封装的安全命名函数
+            let newName = getSafeNewMcpKey(existingKeys, mcpName);
+
+            // 如果名字发生了改变，正则精确替换第一层的键名
+            if (newName !== mcpName) {
+                const keyRegex = new RegExp(`^(\\s*\\{\\s*)"${escapeRegExp(mcpName)}"(\\s*:)`);
+                rawInput = rawInput.replace(keyRegex, `$1"${newName}"$2`);
+            }
+        }
+    }
+    // ================= 结束：新增重名处理 =================
+
+    // 如果最外层有花括号，剥离最外层的 { 和 }，保留内部的 "key": { ... } 片段
+    let snippet = rawInput;
+    if (snippet.startsWith("{") && snippet.endsWith("}")) {
+        snippet = snippet.substring(1, snippet.length - 1).trim();
     }
 
-    // ========== 编辑逻辑：编辑时允许覆盖当前key，不自动加后缀 ==========
-    let finalName;
     if (editTargetKey) {
-        // 编辑模式：如果改了名称才去重，否则直接复用原key
-        if (rawName !== editTargetKey) {
-            const allExistKeys = Object.keys(mcpData.mcpServers);
-            finalName = getSafeNewMcpKey(allExistKeys, rawName);
-            // 删除旧名称配置
-            delete mcpData.mcpServers[editTargetKey];
+        const range = getMcpBlockRange(rawConfigText, editTargetKey);
+        if (range) {
+            rawConfigText = rawConfigText.substring(0, range.start) + snippet + rawConfigText.substring(range.end);
         } else {
-            finalName = rawName;
+            rawConfigText = insertNewMcpSnippet(rawConfigText, snippet);
         }
     } else {
-        // 新增模式：强制去重，重名自动加(2)(3)
-        const allExistKeys = Object.keys(mcpData.mcpServers);
-        finalName = getSafeNewMcpKey(allExistKeys, rawName);
+        rawConfigText = insertNewMcpSnippet(rawConfigText, snippet);
     }
 
-    // 写入新配置
-    mcpData.mcpServers[finalName] = newConfig;
-
-    await saveFullConfig();
+    await saveRawConfig(rawConfigText);
     closeEditMask();
-    await loadConfig();
+    renderTable();
 }
 
-// 删除弹窗
+// 删除弹窗与处理
 function openDelDialog(name) {
     editTargetKey = name;
     document.getElementById("delTip").innerText = `确定删除【${name}】配置吗？`;
@@ -498,15 +626,33 @@ async function confirmDelete() {
     while (!window.pywebview) {
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    delete mcpData.mcpServers[editTargetKey];
-    await saveFullConfig();
+    const range = getMcpBlockRange(rawConfigText, editTargetKey);
+    if (range) {
+        let start = range.start;
+        let end = range.end;
+
+        const rest = rawConfigText.substring(end);
+        const matchAfter = /^\s*,/.exec(rest);
+        if (matchAfter) {
+            end += matchAfter[0].length;
+        } else {
+            const before = rawConfigText.substring(0, start);
+            const matchBefore = /,\s*$/.exec(before);
+            if (matchBefore) {
+                start -= matchBefore[0].length;
+            }
+        }
+
+        rawConfigText = rawConfigText.substring(0, start) + rawConfigText.substring(end);
+        await saveRawConfig(rawConfigText);
+    }
     closeDelMask();
-    await loadConfig();
+    renderTable();
 }
 
-// 批量编辑弹窗
+// 批量修改文本弹窗
 function openBatchEdit() {
-    document.getElementById("batchJson").value = JSON.stringify(mcpData,null,2);
+    document.getElementById("batchJson").value = rawConfigText;
     document.getElementById("batchMask").style.display = "flex";
 }
 function closeBatchMask(){
@@ -516,28 +662,53 @@ async function saveBatchJson() {
     while (!window.pywebview) {
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    const txt = document.getElementById("batchJson").value.trim();
-    try{
-        mcpData = JSON.parse(txt);
-        // 批量保存时自动补全缺失disabled
-        const servers = mcpData.mcpServers || {};
-        for(let k in servers){
-            if(servers[k].disabled === undefined) servers[k].disabled = false;
-        }
-    }catch(e){
-        alert("JSON语法错误："+e.message);
+    const txt = document.getElementById("batchJson").value;
+    // 批量全局JSON校验
+    try {
+        JSON.parse(txt);
+    } catch (e) {
+        alert(`全局配置JSON格式错误：${e.message}`);
         return;
     }
-    await saveFullConfig();
+    await saveRawConfig(txt);
     closeBatchMask();
-    await loadConfig();
-    alert("保存成功，已刷新表格");
+    renderTable();
+    alert("已按原始文本保存并刷新");
 }
 
-// 统一保存完整配置文件
-async function saveFullConfig() {
-    const str = JSON.stringify(mcpData,null,2);
-    await window.pywebview.api.write_mcp_config(str);
+// 检测文本中是否包含 irCtl 关键字
+function checkHasIrCtlField(){
+    const wrap = document.getElementById("genIrCodeWrap");
+    const txt = document.getElementById("editJson").value;
+    if (txt.includes('irCtl')) {
+        wrap.style.display = "block";
+    } else {
+        wrap.style.display = "none";
+    }
+}
+
+document.getElementById("editJson").addEventListener("input", checkHasIrCtlField);
+
+async function genTerminalIrCode(){
+    const jsonStr = document.getElementById("editJson").value.trim();
+    const resp = await window.pywebview.api.gen_terminal_ir_code(jsonStr);
+    if(!resp.ok){
+        alert("失败：" + resp.msg);
+        return;
+    }
+    const preEl = document.getElementById("irResultPre");
+    preEl.textContent = resp.ino_code;
+    document.getElementById("irResultMask").style.display = "flex";
+}
+
+function closeIrResultMask(){
+    document.getElementById("irResultMask").style.display = "none";
+}
+
+async function copyIrResult(){
+    const text = document.getElementById("irResultPre").textContent;
+    await navigator.clipboard.writeText(text);
+    alert("已复制到剪贴板");
 }
 </script>
 </body>
