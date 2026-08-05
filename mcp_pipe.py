@@ -228,6 +228,10 @@ def build_server_command(target=None):
     cfg = load_config()
     servers = cfg.get("mcpServers", {}) if isinstance(cfg, dict) else {}
 
+    # （复用主进程python） ----------------------------------------------
+    current_python = sys.executable  # 锁定当前运行mcp_pipe的venv Python
+    # ----------------------------------------------------------------
+
     if target in servers:
         entry = servers[target] or {}
         if entry.get("disabled"):
@@ -244,6 +248,12 @@ def build_server_command(target=None):
         if typ == "stdio":
             command = entry.get("command")
             args = entry.get("args") or []
+
+            # 关键修复：如果配置里写的是python/python3，替换成当前venv绝对路径（复用主进程python）
+            if command in ("python", "python3", "python.exe"):
+                command = current_python
+            # ----------------------------------------------------------------
+
             if not command:
                 err_msg = f"Server '{target}' is missing 'command'"
                 update_target_status(target, STATUS_CONFIG_ERR, err_msg)
