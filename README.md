@@ -5,9 +5,9 @@
 
 
 # 介绍
-基于Windows的可视化MCP管理桌面应用
+基于Windows的可视化MCP管理+智能家居红外控制桌面应用
 
-<p>本工具为小智MCP标准服务WebSocket桥接客户端，提供windows可视化GUI管理面板，面向小白支持一键安装，支持多MCP服务统一启停、状态可视化展示，大幅简化小智MCP服务对接流程，具体优势如下 👇</p>
+<p>本工具为小智MCP标准服务WebSocket桥接客户端+红外设备智能控制客户端，提供windows可视化GUI管理面板，面向小白支持一键安装，支持多MCP服务统一启停、状态可视化展示，红外设备控制信号可视化编辑，命令自由组合，具体优势如下 👇</p>
 
 1. 一键安装
 2. 环境自动隔离
@@ -16,11 +16,14 @@
 5. 图形界面管理MCP，支持单独修改或批量修改MCP源
 6. 多MCP接入
 7. 所有厂商MCP的MCP配置自动兼容
+8. 红外设备控制信号可视化编辑
+9. 多命令自由组合，定制化控制
 
 <p>本工具无任何收费功能，如果帮你节省了开发时间、解决了问题，欢迎 去B站三连支持一下 或者去 GitHub 点个 Star</b>，你动动手指就是对我最大的鼓励。</p>
 
 # 使用教程
-bilibili：<a href="https://www.bilibili.com/video/BV11sMu6xEid">https://www.bilibili.com/video/BV11sMu6xEid</a>
+MCP调用：<a href="https://www.bilibili.com/video/BV11sMu6xEid">https://www.bilibili.com/video/BV11sMu6xEid</a>  
+智能家居控制（红外设备）：<a href="https://www.bilibili.com/video/BV1BVuc6REJV">https://www.bilibili.com/video/BV1BVuc6REJV</a>
 
 
 # 关于项目
