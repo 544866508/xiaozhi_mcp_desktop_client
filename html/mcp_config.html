@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -572,6 +573,11 @@ async function saveSingleMcp() {
     }
     // ==========新增JSON格式校验结束==========
 
+    // ========== 格式转换：调用 optimizeSingleMcpJson 将用户输入转为小智标准格式 ==========
+    const optimizedObj = optimizeSingleMcpJson(rawInput);
+    rawInput = JSON.stringify(optimizedObj, null, 2)
+    // ========== 格式转换结束 ==========
+
     // ================= 开始：新增重名处理 =================
     if (!editTargetKey) {
         const matchKey = rawInput.match(/^\s*\{\s*"([^"]+)"\s*:/);
@@ -670,7 +676,11 @@ async function saveBatchJson() {
         alert(`全局配置JSON格式错误：${e.message}`);
         return;
     }
-    await saveRawConfig(txt);
+    // ========== 格式转换：调用 optimizeSingleMcpJson 将用户输入转为小智标准格式 ==========
+    const optimizedObj = optimizeSingleMcpJson(txt);
+    const optimizedTxt = JSON.stringify(optimizedObj, null, 2)
+    // ========== 格式转换结束 ==========
+    await saveRawConfig(optimizedTxt);
     closeBatchMask();
     renderTable();
     alert("已按原始文本保存并刷新");
